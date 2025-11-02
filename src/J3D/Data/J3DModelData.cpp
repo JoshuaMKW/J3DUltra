@@ -30,7 +30,7 @@ void J3DModelData::MakeHierarchy(std::shared_ptr<J3DJoint> root, uint32_t& index
     while (true) {
         std::shared_ptr<J3DJoint> currentJoint = nullptr;
         std::shared_ptr<J3DMaterial> currentMaterial;
-        std::shared_ptr<GXShape> currentShape = nullptr;
+        GXShape *currentShape = nullptr;
 
         switch (mHierarchyNodes[index].Type) {
             // The nodes after this one are lower on the hierarchy (eg go down to joint children)

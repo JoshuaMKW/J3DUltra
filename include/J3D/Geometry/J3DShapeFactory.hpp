@@ -53,5 +53,5 @@ public:
 	J3DShapeFactory(J3DShapeBlock* srcBlock) { mBlock = srcBlock; }
 	~J3DShapeFactory() {}
 
-	std::shared_ptr<GXShape> Create(bStream::CStream* stream, uint32_t index, const GXAttributeData* attributes);
+	GXShape* Create(bStream::CStream* stream, uint32_t index, const GXAttributeData* attributes);
 };

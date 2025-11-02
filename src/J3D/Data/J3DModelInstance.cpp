@@ -112,7 +112,7 @@ void J3DModelInstance::UpdateShapeVisibility(float deltaTime) {
         return;
     }
 
-    shared_vector<GXShape>& shapes = mModelData->GetShapes();
+    std::vector<GXShape*>& shapes = mModelData->GetShapes();
     for (uint32_t i = 0; i < shapes.size(); i++) {
         shapes[i]->SetVisible(mVisibilityAnimation->GetVisibilityAtFrame(i, deltaTime));
     }
@@ -192,13 +192,13 @@ void J3DModelInstance::GatherRenderPackets(std::vector<J3DRenderPacket>& packetL
 
     for (std::shared_ptr<J3DMaterial> mat : materials)
     {
-        if (mat->GetShape().expired()) {
+        if (mat->GetShape() == nullptr) {
             continue;
         }
 
-        std::shared_ptr<GXShape> lockedShape = mat->GetShape().lock();
+        GXShape* shape = mat->GetShape();
 
-        const glm::vec3& center = lockedShape->GetCenterOfMass();
+        const glm::vec3& center = shape->GetCenterOfMass();
         glm::vec4 transformedCenter = transformMat4 * glm::vec4(center.x, center.y, center.z, 1.0f);
 
         float distToCamera = glm::distance(cameraPosition, glm::vec3(transformedCenter.x, transformedCenter.y, transformedCenter.z));

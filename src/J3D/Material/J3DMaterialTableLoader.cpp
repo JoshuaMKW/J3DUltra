@@ -68,7 +68,7 @@ std::shared_ptr<J3DMaterialTable> J3DMaterialTableLoader::Load(bStream::CStream*
 
     // Prune materials that weren't initialized.
     for (auto it = materialTable->mMaterials.begin(); it != materialTable->mMaterials.end(); ) {
-        if ((*it)->GetShape().expired()) {
+        if ((*it)->GetShape() == nullptr) {
             it = materialTable->mMaterials.erase(it);
 
             continue;

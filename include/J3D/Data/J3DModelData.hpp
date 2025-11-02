@@ -63,7 +63,7 @@ public:
 
 	std::shared_ptr<J3DModelInstance> CreateInstance();
 
-	shared_vector<GXShape>& GetShapes() { return mGeometry.GetShapes(); }
+	std::vector<GXShape*>& GetShapes() { return mGeometry.GetShapes(); }
 
 	std::vector<glm::mat4> GetRestPose() const;
 	const std::vector<J3DEnvelope>& GetJointEnvelopes() const { return mSkeleton->GetJointEnvelopes(); }

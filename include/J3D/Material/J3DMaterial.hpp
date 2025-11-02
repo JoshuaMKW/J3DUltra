@@ -77,7 +77,7 @@ struct J3DIndirectBlock {
 
 class J3DMaterial {
 	int32_t mShaderProgram;
-	std::weak_ptr<GXShape> mShape;
+	GXShape* mShape;
 
 	glm::mat4 TexMatrices[10]{};
 
@@ -116,8 +116,8 @@ public:
 
 	void CalculateTexMatrices(const glm::mat4& modelMatrix, const glm::mat4& viewMatrix, const glm::mat4& projMatrix);
 
-	std::weak_ptr<GXShape> GetShape() const { return mShape; }
-	void SetShape(std::weak_ptr<GXShape> shape) { mShape = shape; }
+	GXShape* GetShape() const { return mShape; }
+	void SetShape(GXShape* shape) { mShape = shape; }
 
 	int32_t GetShaderProgram() const { return mShaderProgram; }
 	bool GenerateShaders();
