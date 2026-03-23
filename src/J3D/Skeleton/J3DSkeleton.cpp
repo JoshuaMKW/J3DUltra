@@ -53,7 +53,7 @@ std::vector<glm::mat4> J3DSkeleton::CalculateAnimJointPose(const std::vector<glm
     std::vector<glm::mat4> animTransforms;
     animTransforms.reserve(mEnvelopeIndices.size());
 
-    std::vector<glm::mat4> skinningMatrices(transforms.size());
+    std::vector<glm::mat4> skinningMatrices(std::min(transforms.size(), mInverseBindMatrices.size()));
     for (size_t i = 0; i < skinningMatrices.size(); ++i) {
         skinningMatrices[i] = transforms[i] * mInverseBindMatrices[i];
     }
