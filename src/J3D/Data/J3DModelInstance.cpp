@@ -48,30 +48,30 @@ void J3DModelInstance::CalculateJointMatrices(float deltaTime) {
 	else {
 		mAnimationMatrices.assign(mModelData->GetJoints().size(), glm::identity<glm::mat4>());
 	}
+        
+	std::vector<glm::mat4> t(mModelData->GetJoints().size());
 
-    std::vector<glm::mat4> t;
-    t.reserve(mModelData->GetJoints().size());
+    for (size_t i = 0; i < mModelData->GetJoints().size(); ++i) {
+        const std::shared_ptr<J3DJoint>& jnt = mModelData->GetJoints()[i];
+        glm::mat4 localTransform = mAnimationMatrices[jnt->GetJointID()];
 
-	for (const std::shared_ptr<J3DJoint> &jnt : mModelData->GetJoints()) {
-		std::shared_ptr<J3DJoint> p = jnt;
-
-		glm::mat4 completeTransform = glm::identity<glm::mat4>();
-
-		while (p != nullptr) {
-			glm::mat4 parentTransform = mAnimationMatrices[p->GetJointID()];
-
-			if (p->GetAttachFlag() == 1) {
-                // Strip scale by normalizing the basis vectors (Columns 0, 1, 2)
-                parentTransform[0] = glm::vec4(glm::normalize(glm::vec3(parentTransform[0])), 0.0f);
-                parentTransform[1] = glm::vec4(glm::normalize(glm::vec3(parentTransform[1])), 0.0f);
-                parentTransform[2] = glm::vec4(glm::normalize(glm::vec3(parentTransform[2])), 0.0f);
-			}
-
-			completeTransform = parentTransform * completeTransform;
-			p = std::static_pointer_cast<J3DJoint>(p->GetParent().lock());
+		if (jnt->GetAttachFlag() == 1) {
+            // Strip scale by normalizing the basis vectors (Columns 0, 1, 2)
+            localTransform[0] = glm::vec4(glm::normalize(glm::vec3(localTransform[0])), 0.0f);
+            localTransform[1] = glm::vec4(glm::normalize(glm::vec3(localTransform[1])), 0.0f);
+            localTransform[2] = glm::vec4(glm::normalize(glm::vec3(localTransform[2])), 0.0f);
 		}
-
-		t.push_back(completeTransform);
+		
+		std::shared_ptr<J3DJoint> parent = std::static_pointer_cast<J3DJoint>(jnt->GetParent().lock());
+		if (parent != nullptr) {
+			// Multiply local transform by the parent's ALREADY CALCULATED global transform
+			// (Assuming parent is guaranteed to have a lower index than the child)
+			uint32_t parentID = std::static_pointer_cast<J3DJoint>(parent)->GetJointID();
+			t[i] = t[parentID] * localTransform; 
+		} else {
+			// It's the root bone
+			t[i] = localTransform;
+		}
 	}
 
 	mEnvelopeMatrices = mModelData->CalculateAnimJointPose(t);
