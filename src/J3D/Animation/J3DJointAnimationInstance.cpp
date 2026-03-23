@@ -157,7 +157,7 @@ std::vector<glm::mat4> J3DAnimation::J3DJointAnimationInstance::GetTransformsAtF
                              glm::angleAxis(eulerRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
 
 
-        transforms.push_back(glm::translate(translation) * glm::toMat4(rotation) * glm::scale(scale));
+        transforms.emplace_back(glm::translate(translation) * glm::toMat4(rotation) * glm::scale(scale));
     }
 
     return transforms;

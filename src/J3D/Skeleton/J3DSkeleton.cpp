@@ -22,6 +22,8 @@ std::shared_ptr<J3DJoint> J3DSkeleton::GetJoint(std::string name) {
 }
 
 void J3DSkeleton::CalculateRestPose() {
+    mRestPose.clear();
+    mRestPose.reserve(mEnvelopeIndices.size());
     for (int i = 0; i < mEnvelopeIndices.size(); i++) {
         if (mDrawBools[i] == false) {
             mRestPose.push_back(mJoints[mEnvelopeIndices[i]]->GetTransformMatrix());
@@ -29,14 +31,14 @@ void J3DSkeleton::CalculateRestPose() {
         else {
             glm::mat4 matrix = glm::zero<glm::mat4>();
 
-            J3DEnvelope env = mJointEnvelopes[mEnvelopeIndices[i]];
+            const J3DEnvelope &env = mJointEnvelopes[mEnvelopeIndices[i]];
             float weightTotal = 0.f;
 
             for (int j = 0; j < env.Weights.size(); j++) {
                 uint32_t jointIndex = env.JointIndices[j];
 
-                glm::mat4 ibm = mInverseBindMatrices[jointIndex];
-                glm::mat4 jointTransform = mJoints[jointIndex]->GetTransformMatrix();
+                const glm::mat4 &ibm = mInverseBindMatrices[jointIndex];
+                const glm::mat4 &jointTransform = mJoints[jointIndex]->GetTransformMatrix();
 
                 matrix += (jointTransform * ibm) * env.Weights[j];
                 weightTotal += env.Weights[j];
@@ -50,6 +52,7 @@ void J3DSkeleton::CalculateRestPose() {
 
 std::vector<glm::mat4> J3DSkeleton::CalculateAnimJointPose(const std::vector<glm::mat4>& transforms) {
     std::vector<glm::mat4> animTransforms;
+    animTransforms.reserve(mEnvelopeIndices.size());
 
     for (int i = 0; i < mEnvelopeIndices.size(); i++) {
         if (mDrawBools[i] == false) {
@@ -58,14 +61,14 @@ std::vector<glm::mat4> J3DSkeleton::CalculateAnimJointPose(const std::vector<glm
         else {
             glm::mat4 matrix = glm::zero<glm::mat4>();
 
-            J3DEnvelope env = mJointEnvelopes[mEnvelopeIndices[i]];
+            const J3DEnvelope &env = mJointEnvelopes[mEnvelopeIndices[i]];
             float weightTotal = 0.f;
 
             for (int j = 0; j < env.Weights.size(); j++) {
                 uint32_t jointIndex = env.JointIndices[j];
 
-                glm::mat4 ibm = mInverseBindMatrices[jointIndex];
-                glm::mat4 jointTransform = transforms[jointIndex];
+                const glm::mat4 &ibm = mInverseBindMatrices[jointIndex];
+                const glm::mat4 &jointTransform = transforms[jointIndex];
 
                 matrix += (jointTransform * ibm) * env.Weights[j];
                 weightTotal += env.Weights[j];

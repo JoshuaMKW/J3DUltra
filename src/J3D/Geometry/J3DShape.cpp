@@ -7,7 +7,7 @@
 
 void J3DShape::EnableAttributes(std::vector<J3DVCDData>& gxAttributes) {
 	mEnabledAttributes.reserve(gxAttributes.size());
-	for (auto attr : gxAttributes) {
+	for (const J3DVCDData &attr : gxAttributes) {
 		switch (attr.Attribute) {
 			case EGXAttribute::PositionMatrixIdx:
 				mEnabledAttributes.push_back(EGLAttribute::PositionMatrixIdx);
@@ -53,7 +53,7 @@ void J3DShape::EnableAttributes(std::vector<J3DVCDData>& gxAttributes) {
 }
 
 bool J3DShape::HasEnabledAttribute(const EGLAttribute attribute) const {
-	for (auto a : mEnabledAttributes) {
+	for (EGLAttribute a : mEnabledAttributes) {
 		if (a == attribute)
 			return true;
 	}
@@ -63,17 +63,17 @@ bool J3DShape::HasEnabledAttribute(const EGLAttribute attribute) const {
 
 void J3DShape::ConcatenatePacketsToIBO(std::vector<J3DVertexGX>& ibo) {
 	mIBOStart = (uint32_t)ibo.size();
+    mIBOCount = 0;
 
-	for (auto a : mPackets) {
-		mIBOCount += (uint32_t)a.mVertices.size();
-
-		for (const auto& t : a.mVertices)
-		{
-			ibo.push_back(t);
-		}
+    for (const J3DPacket& a : mPackets) {
+        mIBOCount += a.mVertices.size();
 	}
 
-	ibo.shrink_to_fit();
+	ibo.reserve(static_cast<size_t>(mIBOStart + mIBOCount));
+
+	for (const J3DPacket &a : mPackets) {
+        ibo.insert(ibo.end(), a.mVertices.begin(), a.mVertices.end());
+	}
 }
 
 void J3DShape::RenderShape() {
