@@ -67,8 +67,8 @@ void J3DModelInstance::CalculateJointMatrices(float deltaTime) {
                 parentTransform[2] = glm::vec4(glm::normalize(glm::vec3(parentTransform[2])), 0.0f);
 			}
 
-			completeTransform = mAnimationMatrices[p->GetJointID()] * completeTransform;
-			p = std::dynamic_pointer_cast<J3DJoint>(p->GetParent().lock());
+			completeTransform = parentTransform * completeTransform;
+			p = std::static_pointer_cast<J3DJoint>(p->GetParent().lock());
 		}
 
 		t.push_back(completeTransform);

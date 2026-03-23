@@ -47,12 +47,16 @@ void J3DSkeleton::CalculateRestPose() {
             mRestPose.push_back(matrix);
         }
     }
-    mRestPose.shrink_to_fit();
 }
 
 std::vector<glm::mat4> J3DSkeleton::CalculateAnimJointPose(const std::vector<glm::mat4>& transforms) {
     std::vector<glm::mat4> animTransforms;
     animTransforms.reserve(mEnvelopeIndices.size());
+
+    std::vector<glm::mat4> skinningMatrices(transforms.size());
+    for (size_t i = 0; i < skinningMatrices.size(); ++i) {
+        skinningMatrices[i] = transforms[i] * mInverseBindMatrices[i];
+    }
 
     for (int i = 0; i < mEnvelopeIndices.size(); i++) {
         if (mDrawBools[i] == false) {
@@ -62,23 +66,16 @@ std::vector<glm::mat4> J3DSkeleton::CalculateAnimJointPose(const std::vector<glm
             glm::mat4 matrix = glm::zero<glm::mat4>();
 
             const J3DEnvelope &env = mJointEnvelopes[mEnvelopeIndices[i]];
-            float weightTotal = 0.f;
 
             for (int j = 0; j < env.Weights.size(); j++) {
                 uint32_t jointIndex = env.JointIndices[j];
 
-                const glm::mat4 &ibm = mInverseBindMatrices[jointIndex];
-                const glm::mat4 &jointTransform = transforms[jointIndex];
-
-                matrix += (jointTransform * ibm) * env.Weights[j];
-                weightTotal += env.Weights[j];
+                matrix += skinningMatrices[jointIndex] * env.Weights[j];
             }
 
             animTransforms.push_back(matrix);
         }
     }
-
-    animTransforms.shrink_to_fit();
 
     return animTransforms;
 }
