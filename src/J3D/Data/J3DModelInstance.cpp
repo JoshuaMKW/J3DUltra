@@ -181,7 +181,7 @@ void J3DModelInstance::SetLight(const J3DLight& light, int index) {
 	mLights[index] = light;
 }
 
-void J3DModelInstance::SetReferenceFrame(const glm::mat4 frame) {
+void J3DModelInstance::SetReferenceFrame(const glm::mat4 &frame) {
 	mReferenceFrame = frame;
 }
 
