@@ -131,7 +131,7 @@ std::shared_ptr<J3DTexture> J3DTextureLoader::Load(const std::string& textureNam
     texture->ImageData.push_back(imgData);
     SetTextureMipImage(texture->TexHandle, i, mipWidth, mipHeight, imgData);
 
-#ifdef _DEBUG
+#ifdef J3DULTRA_DEBUG_TEXTURES
     OutputPNG(i, texture);
 #endif
   }
