@@ -145,7 +145,7 @@ void J3DAnimation::J3DJointFullAnimationInstance::GetTransformsAtFrame(float del
         transform[1] *= scale.y;
         transform[2] *= scale.z;
 
-        out[i] = std::move(transform);
+        out[i++] = std::move(transform);
 #endif
     }
 }
