@@ -18,6 +18,8 @@ void J3DAnimation::J3DJointAnimationInstance::ReadFloatComponentTrack(bStream::C
     size_t currentStreamPos = stream.tell();
     stream.seek(valueTableOffset + firstKeyIndex * sizeof(float));
 
+    track.ReserveKeys(keyCount);
+
     if (keyCount == 1) {
         J3DAnimationKey newKey;
         newKey.Value = stream.readFloat();
@@ -63,6 +65,8 @@ void J3DAnimation::J3DJointAnimationInstance::ReadRotationComponentTrack(
 
     size_t currentStreamPos = stream.tell();
     stream.seek(valueTableOffset + firstKeyIndex * sizeof(uint16_t));
+
+    track.ReserveKeys(keyCount);
 
     if (keyCount == 1) {
         J3DAnimationKey newKey;
@@ -137,12 +141,14 @@ void J3DAnimation::J3DJointAnimationInstance::Deserialize(bStream::CStream& stre
     stream.seek(currentStreamPos + jointKeyBlock.BlockSize);
 }
 
-std::vector<glm::mat4> J3DAnimation::J3DJointAnimationInstance::GetTransformsAtFrame(float deltaTime) {
-    std::vector<glm::mat4> transforms;
+void J3DAnimation::J3DJointAnimationInstance::GetTransformsAtFrame(float deltaTime, std::vector<glm::mat4> &out) {
     float frameTime = GetFrame();
 
-    transforms.reserve(mEntries.size());
+    if (out.size() != mEntries.size()) {
+        out.resize(mEntries.size());
+    }
 
+    size_t i = 0;
     for (const J3DJointAnimationData& j : mEntries) {
         glm::vec3 translation = glm::vec3(j.TranslationX.GetValue(frameTime), j.TranslationY.GetValue(frameTime), j.TranslationZ.GetValue(frameTime));
         glm::vec3 scale = glm::vec3(j.ScaleX.GetValue(frameTime), j.ScaleY.GetValue(frameTime), j.ScaleZ.GetValue(frameTime));
@@ -152,13 +158,23 @@ std::vector<glm::mat4> J3DAnimation::J3DJointAnimationInstance::GetTransformsAtF
             glm::radians(j.RotationZ.GetValue(frameTime))
         );
 
+#if 0
         glm::quat rotation = glm::angleAxis(eulerRotation.z, glm::vec3(0.0f, 0.0f, 1.0f)) *
                              glm::angleAxis(eulerRotation.y, glm::vec3(0.0f, 1.0f, 0.0f)) *
                              glm::angleAxis(eulerRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
 
 
         transforms.emplace_back(glm::translate(translation) * glm::toMat4(rotation) * glm::scale(scale));
-    }
+#else
+        glm::mat4 transform = glm::eulerAngleZYX(eulerRotation.z, eulerRotation.y, eulerRotation.x);
 
-    return transforms;
+        transform[3] = glm::vec4(translation, 1.0f);
+
+        transform[0] *= scale.x;
+        transform[1] *= scale.y;
+        transform[2] *= scale.z;
+
+        out[i] = std::move(transform);
+#endif
+    }
 }

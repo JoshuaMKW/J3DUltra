@@ -22,6 +22,12 @@ float J3DAnimation::J3DDiscreteAnimationTrack::GetValue(float time) const {
     }
 }
 
-void J3DAnimation::J3DDiscreteAnimationTrack::AddKey(J3DAnimation::J3DAnimationKey key) {
+void J3DAnimation::J3DDiscreteAnimationTrack::ReserveKeys(size_t count)
+{
+    mKeys.reserve(count);
+}
+
+void J3DAnimation::J3DDiscreteAnimationTrack::AddKey(J3DAnimation::J3DAnimationKey key)
+{
     mKeys.push_back(key);
 }

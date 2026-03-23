@@ -52,7 +52,7 @@ class J3DModelData : public std::enable_shared_from_this<J3DModelData> {
 
 	std::shared_ptr<J3DMaterialTable> mMaterialTable;
 
-	void MakeHierarchy(std::shared_ptr<J3DJoint> root, uint32_t& index);
+	void MakeHierarchy(const std::shared_ptr<J3DJoint> &root, uint32_t& index);
 	void CalculateRestPose();
 	
 	void CreateVBO();
@@ -70,7 +70,7 @@ public:
 
 	shared_vector<GXShape>& GetShapes() { return mGeometry.GetShapes(); }
 
-	std::vector<glm::mat4> GetRestPose() const;
+	const std::vector<glm::mat4> &GetRestPose() const;
 	const std::vector<J3DEnvelope>& GetJointEnvelopes() const { return mSkeleton->GetJointEnvelopes(); }
 	shared_vector<J3DJoint>& GetJoints() { return mSkeleton->GetJoints(); }
 

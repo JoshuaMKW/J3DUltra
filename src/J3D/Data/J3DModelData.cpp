@@ -24,7 +24,7 @@ J3DModelData::~J3DModelData() {
     glDeleteVertexArrays(1, &mVAO);
 }
 
-void J3DModelData::MakeHierarchy(std::shared_ptr<J3DJoint> root, uint32_t& index) {
+void J3DModelData::MakeHierarchy(const std::shared_ptr<J3DJoint> &root, uint32_t& index) {
     std::shared_ptr<J3DJoint> last = root;
     const auto& shapes = mGeometry.GetShapes();
 
@@ -104,22 +104,17 @@ bool J3DModelData::InitializeGL() {
     const auto& verts = mGeometry.GetModelVertices();
     const auto& indices = mGeometry.GetModelIndices();
 
-    mBBMin = { 0, 0, 0 };
-    mBBMax = { 0, 0, 0 };
-    for (const auto& vertex : verts) {
-        if (mBBMin.x > vertex.Position.x)
-            mBBMin.x = vertex.Position.x;
-        if (mBBMin.y > vertex.Position.y)
-            mBBMin.y = vertex.Position.y;
-        if (mBBMin.z > vertex.Position.z)
-            mBBMin.z = vertex.Position.z;
+    mBBMin = { FLT_MAX, FLT_MAX, FLT_MAX };
+    mBBMax = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
-        if (mBBMax.x < vertex.Position.x)
-            mBBMax.x = vertex.Position.x;
-        if (mBBMax.y < vertex.Position.y)
-            mBBMax.y = vertex.Position.y;
-        if (mBBMax.z < vertex.Position.z)
-            mBBMax.z = vertex.Position.z;
+    for (const auto& vertex : verts) {
+        mBBMin.x = std::min(mBBMin.x, vertex.Position.x);
+        mBBMin.y = std::min(mBBMin.y, vertex.Position.y);
+        mBBMin.z = std::min(mBBMin.z, vertex.Position.z);
+
+        mBBMax.x = std::max(mBBMax.x, vertex.Position.x);
+        mBBMax.y = std::max(mBBMax.y, vertex.Position.y);
+        mBBMax.z = std::max(mBBMax.z, vertex.Position.z);
     }
 
     // Create VBO
@@ -247,7 +242,7 @@ void J3DModelData::GetBoundingBox(glm::vec3& min, glm::vec3& max) const {
   max = mBBMax;
 }
 
-std::vector<glm::mat4> J3DModelData::GetRestPose() const {
+const std::vector<glm::mat4> &J3DModelData::GetRestPose() const {
     return mSkeleton->GetRestPose();
 }
 

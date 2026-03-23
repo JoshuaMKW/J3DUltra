@@ -19,6 +19,8 @@ void J3DAnimation::J3DColorAnimationInstance::ReadColorTrack(bStream::CStream& s
     size_t currentStreamPos = stream.tell();
     stream.seek(valueTableOffset + firstKeyIndex * sizeof(uint16_t));
 
+    track.ReserveKeys(keyCount);
+
     if (keyCount == 1) {
         J3DAnimationKey newKey;
         newKey.Value = static_cast<float>(stream.readInt16());

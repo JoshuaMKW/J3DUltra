@@ -14,6 +14,8 @@ void J3DAnimation::J3DVisibilityAnimationInstance::ReadBooleanComponentTrack(
     size_t currentStreamPos = stream.tell();
     stream.seek(valueTableOffset + firstKeyIndex * sizeof(float));
 
+    track.ReserveKeys(keyCount);
+
     for (uint16_t i = 0; i < keyCount; i++) {
         J3DAnimationKey newKey;
 

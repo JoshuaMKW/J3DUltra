@@ -55,6 +55,12 @@ float J3DAnimation::J3DHermiteAnimationTrack::InterpolateValue(float time, const
     return result.x + result.y + result.z + result.w;
 }
 
-void J3DAnimation::J3DHermiteAnimationTrack::AddKey(J3DAnimation::J3DAnimationKey key) {
+void J3DAnimation::J3DHermiteAnimationTrack::ReserveKeys(size_t capacity)
+{
+    mKeys.reserve(capacity);
+}
+
+void J3DAnimation::J3DHermiteAnimationTrack::AddKey(J3DAnimation::J3DAnimationKey key)
+{
     mKeys.push_back(key);
 }

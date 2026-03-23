@@ -20,6 +20,8 @@ void J3DAnimation::J3DTexMatrixAnimationInstance::ReadFloatComponentTrack(bStrea
     size_t currentStreamPos = stream.tell();
     stream.seek(valueTableOffset + firstKeyIndex * sizeof(float));
 
+    track.ReserveKeys(keyCount);
+
     if (keyCount == 1) {
         J3DAnimationKey newKey;
         newKey.Value = stream.readFloat();
@@ -65,6 +67,8 @@ void J3DAnimation::J3DTexMatrixAnimationInstance::ReadRotationComponentTrack(
 
     size_t currentStreamPos = stream.tell();
     stream.seek(valueTableOffset + firstKeyIndex * sizeof(uint16_t));
+
+    track.ReserveKeys(keyCount);
 
     if (keyCount == 1) {
         J3DAnimationKey newKey;

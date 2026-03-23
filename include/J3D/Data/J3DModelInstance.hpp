@@ -26,6 +26,7 @@ class J3DMaterialTable;
 
 class J3DModelInstance {
     std::shared_ptr<J3DModelData> mModelData;
+    std::vector<glm::mat4> mAnimationMatrices;
     std::vector<glm::mat4> mEnvelopeMatrices;
     J3DTransformInfo mTransform;
 
@@ -76,12 +77,12 @@ public:
     J3DModelInstance(std::shared_ptr<J3DModelData> modelData, uint16_t id);
     virtual ~J3DModelInstance();
 
-    void SetTranslation(const glm::vec3 trans);
-    void SetRotation(const glm::vec3 rot);
-    void SetScale(const glm::vec3 scale);
+    void SetTranslation(const glm::vec3 &trans);
+    void SetRotation(const glm::vec3 &rot);
+    void SetScale(const glm::vec3 &scale);
 
-    void SetTransform(const glm::mat4 transform);
-    void SetReferenceFrame(const glm::mat4 frame);
+    void SetTransform(const glm::mat4 &transform);
+    void SetReferenceFrame(const glm::mat4 &frame);
 
     void GetBoundingBox(glm::vec3& min, glm::vec3& max) const;
 	const shared_vector<J3DMaterial>& GetMaterials() const;
@@ -89,10 +90,10 @@ public:
     void GatherRenderPackets(std::vector<J3DRenderPacket>& packetList, glm::vec3 cameraPosition);
 
     void UpdateAnimations(float deltaTime);
-    void Render(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, uint32_t materialShaderOverride = 0);
+    void Render(float deltaTime, const std::shared_ptr<J3DMaterial> &material, glm::mat4& viewMatrix, glm::mat4& projMatrix, uint32_t materialShaderOverride = 0);
 
     // Call this after Render to reuse the model calculations view/proj matrices for static rendering.
-    void StaticRender(std::shared_ptr<J3DMaterial> material, uint32_t materialShaderOverride = 0);
+    void StaticRender(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride = 0);
 
     J3DLight GetLight(int index) const;
     void SetLight(const J3DLight& light, int index);

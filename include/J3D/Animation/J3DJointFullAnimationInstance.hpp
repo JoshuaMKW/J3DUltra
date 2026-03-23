@@ -33,6 +33,6 @@ namespace J3DAnimation {
         const std::vector<J3DJointFullAnimationData>& GetEntries() const { return mEntries; }
         uint32_t GetJointCount() const { return (uint32_t)mEntries.size(); }
 
-        virtual std::vector<glm::mat4> GetTransformsAtFrame(float deltaTime);
+        virtual void GetTransformsAtFrame(float deltaTime, std::vector<glm::mat4> &out);
     };
 }

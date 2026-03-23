@@ -43,6 +43,8 @@ void J3DAnimation::J3DTexIndexAnimationInstance::Deserialize(bStream::CStream& s
         size_t currentStreamPos = stream.tell();
         stream.seek(indexKeyBlock.IndexTableOffset + firstKeyIndex * sizeof(uint16_t));
 
+        animData.Track.ReserveKeys(keyCount);
+
         for (int i = 0; i < keyCount; i++) {
             J3DAnimationKey newKey;
             newKey.Value = stream.readUInt16();

@@ -39,39 +39,35 @@ void J3DModelInstance::CalculateJointMatrices(float deltaTime) {
 		return;
 	}
 
-	std::vector<glm::mat4> animTransforms;
-
 	if (mJointAnimation != nullptr) {
-		animTransforms = mJointAnimation->GetTransformsAtFrame(deltaTime);
+		mJointAnimation->GetTransformsAtFrame(deltaTime, mAnimationMatrices);
 	}
 	else if (mJointFullAnimation != nullptr) {
-		animTransforms = mJointFullAnimation->GetTransformsAtFrame(deltaTime);
+		mJointFullAnimation->GetTransformsAtFrame(deltaTime, mAnimationMatrices);
 	}
 	else {
-		animTransforms = { glm::identity<glm::mat4>() };
+		mAnimationMatrices.assign(mModelData->GetJoints().size(), glm::identity<glm::mat4>());
 	}
 
     std::vector<glm::mat4> t;
     t.reserve(mModelData->GetJoints().size());
 
-	for (std::shared_ptr<J3DJoint> jnt : mModelData->GetJoints()) {
+	for (const std::shared_ptr<J3DJoint> &jnt : mModelData->GetJoints()) {
 		std::shared_ptr<J3DJoint> p = jnt;
 
 		glm::mat4 completeTransform = glm::identity<glm::mat4>();
 
 		while (p != nullptr) {
-			glm::mat4 parentTransform = animTransforms[p->GetJointID()];
+			glm::mat4 parentTransform = mAnimationMatrices[p->GetJointID()];
 
 			if (p->GetAttachFlag() == 1) {
-				glm::vec3 scale, translation, skew;
-				glm::vec4 persp;
-				glm::quat rotation;
-
-				glm::decompose(parentTransform, scale, rotation, translation, skew, persp);
-				parentTransform = glm::inverse(glm::scale(scale)) * parentTransform;
+                // Strip scale by normalizing the basis vectors (Columns 0, 1, 2)
+                parentTransform[0] = glm::vec4(glm::normalize(glm::vec3(parentTransform[0])), 0.0f);
+                parentTransform[1] = glm::vec4(glm::normalize(glm::vec3(parentTransform[1])), 0.0f);
+                parentTransform[2] = glm::vec4(glm::normalize(glm::vec3(parentTransform[2])), 0.0f);
 			}
 
-			completeTransform = animTransforms[p->GetJointID()] * completeTransform;
+			completeTransform = mAnimationMatrices[p->GetJointID()] * completeTransform;
 			p = std::dynamic_pointer_cast<J3DJoint>(p->GetParent().lock());
 		}
 
@@ -134,26 +130,20 @@ void J3DModelInstance::Update(float deltaTime, std::shared_ptr<J3DMaterial> mate
 	J3DUniformBufferObject::SetModelMatrix(transformMat4);
 }
 
-void J3DModelInstance::SetTranslation(const glm::vec3 trans) {
+void J3DModelInstance::SetTranslation(const glm::vec3 &trans) {
 	mTransform.Translation = trans;
 }
 
-void J3DModelInstance::SetRotation(const glm::vec3 rot) {
-	glm::vec3 eulerRotation;
-	eulerRotation.x = glm::radians(rot.x);
-	eulerRotation.y = glm::radians(rot.y);
-	eulerRotation.z = glm::radians(rot.z);
-
-	mTransform.Rotation = glm::angleAxis(eulerRotation.z, glm::vec3(0.0f, 0.0f, 1.0f)) *
-		glm::angleAxis(eulerRotation.y, glm::vec3(0.0f, 1.0f, 0.0f)) *
-		glm::angleAxis(eulerRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+void J3DModelInstance::SetRotation(const glm::vec3 &rot) {
+    glm::vec3 eulerRotation = glm::radians(rot);
+    mTransform.Rotation = glm::quat(eulerRotation);
 }
 
-void J3DModelInstance::SetScale(const glm::vec3 scale) {
+void J3DModelInstance::SetScale(const glm::vec3 &scale) {
 	mTransform.Scale = scale;
 }
 
-void J3DModelInstance::SetTransform(const glm::mat4 transform) {
+void J3DModelInstance::SetTransform(const glm::mat4 &transform) {
 	glm::vec3 translation, scale, skew;
 	glm::vec4 perspective;
 	glm::quat rotation;
@@ -202,7 +192,7 @@ void J3DModelInstance::GatherRenderPackets(std::vector<J3DRenderPacket>& packetL
 
     packetList.reserve(packetList.size() + materials.size() + 1);
 
-    for (std::shared_ptr<J3DMaterial> mat : materials)
+    for (const std::shared_ptr<J3DMaterial> &mat : materials)
     {
         if (mat->GetShape().expired()) {
             continue;
@@ -253,7 +243,7 @@ void J3DModelInstance::UpdateAnimations(float deltaTime) {
 	}
 }
 
-void J3DModelInstance::Render(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, uint32_t materialShaderOverride) {
+void J3DModelInstance::Render(float deltaTime, const std::shared_ptr<J3DMaterial> &material, glm::mat4& viewMatrix, glm::mat4& projMatrix, uint32_t materialShaderOverride) {
 	Update(deltaTime, material, viewMatrix, projMatrix);
 
 	J3DUniformBufferObject::SetModelId(mModelId);
@@ -265,7 +255,7 @@ void J3DModelInstance::Render(float deltaTime, std::shared_ptr<J3DMaterial> mate
 	mModelData->UnbindVAO();
 }
 
-void J3DModelInstance::StaticRender(std::shared_ptr<J3DMaterial> material, uint32_t materialShaderOverride)
+void J3DModelInstance::StaticRender(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride)
 {
 	J3DUniformBufferObject::SetEnvelopeMatrices(mEnvelopeMatrices.data(),
 		(uint32_t)mEnvelopeMatrices.size());

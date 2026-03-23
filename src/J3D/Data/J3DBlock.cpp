@@ -130,6 +130,7 @@ void J3DVertexBlock::LoadAttributeData(GXAttributeData* vertexData, bStream::CSt
 
   for (uint32_t i = 0; i < attributeCount; i++) {
     std::vector<float> floatBuffer;
+    floatBuffer.reserve(elementCount);
 
     for (uint32_t j = 0; j < elementCount; j++) {
       if (curAttribute.Attribute == EGXAttribute::Color0 || curAttribute.Attribute == EGXAttribute::Color1) {

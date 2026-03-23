@@ -23,6 +23,7 @@ namespace J3DAnimation {
         J3DHermiteAnimationTrack();
         ~J3DHermiteAnimationTrack();
 
+        void ReserveKeys(size_t capacity);
         void AddKey(J3DAnimationKey key);
         float GetValue(float time) const;
     };
