@@ -120,6 +120,7 @@ void J3DModelInstance::UpdateShapeVisibility(float deltaTime) {
 }
 
 void J3DModelInstance::Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix) {
+    UpdateAnimations(deltaTime);
 	UpdateTEVRegisterColors(deltaTime, material);
 	UpdateMaterialTextures(deltaTime, material);
 	UpdateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
@@ -246,19 +247,7 @@ void J3DModelInstance::UpdateAnimations(float deltaTime) {
 	}
 }
 
-void J3DModelInstance::Render(float deltaTime, const std::shared_ptr<J3DMaterial> &material, glm::mat4& viewMatrix, glm::mat4& projMatrix, uint32_t materialShaderOverride) {
-	Update(deltaTime, material, viewMatrix, projMatrix);
-
-	J3DUniformBufferObject::SetModelId(mModelId);
-	mModelData->BindVAO();
-
-	auto& textures = CheckUseInstanceTextures() ? mInstanceMaterialTable->GetTextures() : mModelData->GetTextures();
-	material->Render(textures, materialShaderOverride);
-
-	mModelData->UnbindVAO();
-}
-
-void J3DModelInstance::StaticRender(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride)
+void J3DModelInstance::Render(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride)
 {
 	J3DUniformBufferObject::SetEnvelopeMatrices(mEnvelopeMatrices.data(),
 		(uint32_t)mEnvelopeMatrices.size());

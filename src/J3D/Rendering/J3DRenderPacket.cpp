@@ -4,7 +4,17 @@
 
 #include <iostream>
 
-void J3DRenderPacket::Render(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, uint32_t materialShaderOverride)
+void J3DRenderPacket::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix)
+{
+    if (Material == nullptr || Instance == nullptr) {
+        std::cout << "Material or data pointers were invalid!" << std::endl;
+        return;
+    }
+
+    Instance->Update(deltaTime, Material, viewMatrix, projMatrix);
+}
+
+void J3DRenderPacket::Render(uint32_t materialShaderOverride)
 {
     if (Material == nullptr || Instance == nullptr)
     {
@@ -12,16 +22,5 @@ void J3DRenderPacket::Render(float deltaTime, glm::mat4& viewMatrix, glm::mat4& 
         return;
     }
 
-    Instance->Render(deltaTime, Material, viewMatrix, projMatrix, materialShaderOverride);
-}
-
-void J3DRenderPacket::StaticRender(uint32_t materialShaderOverride)
-{
-  if (Material == nullptr || Instance == nullptr)
-  {
-    std::cout << "Material or data pointers were invalid!" << std::endl;
-    return;
-  }
-
-  Instance->StaticRender(Material, materialShaderOverride);
+    Instance->Render(Material, materialShaderOverride);
 }

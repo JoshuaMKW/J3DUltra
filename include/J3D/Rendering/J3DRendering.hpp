@@ -17,11 +17,11 @@ namespace J3D {
         void SetSortFunction(std::function<void(RenderPacketVector&)> sortFunction);
         RenderPacketVector SortPackets(ModelInstanceVector& modelInstances, glm::vec3 cameraPosition);
 
-        void Render(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix,
-                    RenderPacketVector& modelInstances, uint32_t materialShaderOverride = 0);
+        void Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix,
+                    RenderPacketVector& modelInstances);
 
         // Call this after Render to reuse the model calculations view/proj matrices for static rendering.
         // Note: This is used by J3D::Picking
-        void StaticRender(RenderPacketVector& modelInstances, uint32_t materialShaderOverride = 0);
+        void Render(RenderPacketVector& modelInstances, uint32_t materialShaderOverride = 0);
     }
 }

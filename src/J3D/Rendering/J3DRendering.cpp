@@ -1,3 +1,5 @@
+#include <execution>
+
 #include "J3D/Rendering/J3DRendering.hpp"
 #include "J3D/Rendering/J3DRenderPacket.hpp"
 #include "J3D/Data/J3DModelInstance.hpp"
@@ -34,15 +36,18 @@ J3D::Rendering::RenderPacketVector J3D::Rendering::SortPackets(ModelInstanceVect
     return packets;
 }
 
-void J3D::Rendering::Render(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, RenderPacketVector& renderPackets, uint32_t materialShaderOverride) {
-    for (J3DRenderPacket packet : renderPackets) {
-        packet.Render(deltaTime, viewMatrix, projMatrix, materialShaderOverride);
-    }
+void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, RenderPacketVector& renderPackets) {
+    //for (J3DRenderPacket &packet : renderPackets) {
+    //    packet.Update(deltaTime, viewMatrix, projMatrix);
+    //}
+
+    std::for_each(std::execution::par_unseq, renderPackets.begin(), renderPackets.end(), [&deltaTime, &viewMatrix, &projMatrix](J3DRenderPacket& packet) {
+        packet.Update(deltaTime, viewMatrix, projMatrix);
+    });
 }
 
-void J3D::Rendering::StaticRender(RenderPacketVector& renderPackets, uint32_t materialShaderOverride)
-{
-  for (J3DRenderPacket packet : renderPackets) {
-    packet.StaticRender(materialShaderOverride);
-  }
+void J3D::Rendering::Render(RenderPacketVector& renderPackets, uint32_t materialShaderOverride) {
+    for (J3DRenderPacket &packet : renderPackets) {
+        packet.Render(materialShaderOverride);
+    }
 }

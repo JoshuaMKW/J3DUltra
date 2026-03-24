@@ -55,7 +55,7 @@ class J3DModelInstance {
     // Updates shape visibility based on a loaded BVA animation.
     void UpdateShapeVisibility(float deltaTime);
 
-    void Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix);
+    void UpdateAnimations(float deltaTime);
 
     std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> mRegisterColorAnimation;
     std::shared_ptr<J3DAnimation::J3DTexIndexAnimationInstance> mTexIndexAnimation;
@@ -89,11 +89,8 @@ public:
 
     void GatherRenderPackets(std::vector<J3DRenderPacket>& packetList, glm::vec3 cameraPosition);
 
-    void UpdateAnimations(float deltaTime);
-    void Render(float deltaTime, const std::shared_ptr<J3DMaterial> &material, glm::mat4& viewMatrix, glm::mat4& projMatrix, uint32_t materialShaderOverride = 0);
-
-    // Call this after Render to reuse the model calculations view/proj matrices for static rendering.
-    void StaticRender(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride = 0);
+    void Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix);
+    void Render(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride = 0);
 
     J3DLight GetLight(int index) const;
     void SetLight(const J3DLight& light, int index);
