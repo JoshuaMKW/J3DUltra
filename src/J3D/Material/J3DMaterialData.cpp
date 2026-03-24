@@ -204,11 +204,7 @@ bool J3DTexCoordInfo::operator!=(const J3DTexCoordInfo& other) const {
 }
 
 /* == J3DTexMatrixInfo == */
-J3DTexMatrixInfo::J3DTexMatrixInfo() : Type(EGXTexMatrixType::Matrix2x4), CalcType(EJ3DMatrixCalcType::SOFTIMAGE), TexEffect(EJ3DTexEffect::NONE), Origin(glm::vec3(0.5f, 0.5f, 0.5f)), ProjectionMatrix(glm::identity<glm::mat4>()) {
-	Transform.Scale = glm::vec2(1.0f, 1.0f);
-	Transform.Rotation = 0.0f;
-	Transform.Translation = glm::vec2(0.0f, 0.0f);
-}
+J3DTexMatrixInfo::J3DTexMatrixInfo() : Type(EGXTexMatrixType::Matrix2x4), CalcType(EJ3DMatrixCalcType::SOFTIMAGE), TexEffect(EJ3DTexEffect::NONE), Origin(glm::vec3(0.5f, 0.5f, 0.5f)), ProjectionMatrix(glm::identity<glm::mat4>()), Transform() {}
 
 void J3DTexMatrixInfo::Serialize(bStream::CStream* stream) {
 	stream->writeUInt8((uint8_t)Type);
@@ -283,36 +279,40 @@ glm::mat4 J3DTexMatrixInfo::CalculateInputMatrix(const glm::mat4& modelViewMtx, 
 glm::mat4 J3DTexMatrixInfo::CalculateSRTMatrix() {
 	glm::mat4 srtMtx = glm::identity<glm::mat4>();
 
+	const glm::vec2& scale = Transform.GetScale();
+    const float rotation = Transform.GetRotation();
+    const glm::vec2& translation = Transform.GetTranslation();
+
 	if (CalcType == EJ3DMatrixCalcType::SOFTIMAGE) {
-		srtMtx[0][0] = Transform.Scale.x * glm::cos(Transform.Rotation);
-		srtMtx[0][1] = Transform.Scale.x * -glm::sin(Transform.Rotation);
+		srtMtx[0][0] = scale.x * glm::cos(rotation);
+		srtMtx[0][1] = scale.x * -glm::sin(rotation);
 
-		srtMtx[0][3] = -glm::cos(Transform.Rotation) * Origin.x +
-			glm::sin(Transform.Rotation) * Origin.y +
-			Origin.x + Transform.Translation.x;
+		srtMtx[0][3] = -glm::cos(rotation) * Origin.x +
+			glm::sin(rotation) * Origin.y +
+			Origin.x + translation.x;
 
-		srtMtx[1][0] = Transform.Scale.y * glm::sin(Transform.Rotation);
-		srtMtx[1][1] = Transform.Scale.y * glm::cos(Transform.Rotation);
+		srtMtx[1][0] = scale.y * glm::sin(rotation);
+		srtMtx[1][1] = scale.y * glm::cos(rotation);
 
-		srtMtx[1][3] = glm::sin(Transform.Rotation) * Origin.x -
-			glm::cos(Transform.Rotation) * Origin.y +
-			Origin.y + Transform.Translation.y;
+		srtMtx[1][3] = glm::sin(rotation) * Origin.x -
+			glm::cos(rotation) * Origin.y +
+			Origin.y + translation.y;
 	}
 	else {
-		srtMtx[0][0] = Transform.Scale.x * glm::cos(Transform.Rotation);
-		srtMtx[0][1] = Transform.Scale.y * glm::sin(Transform.Rotation);
+		srtMtx[0][0] = scale.x * glm::cos(rotation);
+		srtMtx[0][1] = scale.y * glm::sin(rotation);
 
 		srtMtx[0][2] = (
-			(Transform.Translation.x - 0.5f) * glm::cos(Transform.Rotation) -
-			(Transform.Translation.y - 0.5f + Transform.Scale.y) * glm::sin(Transform.Rotation) + 0.5f
+			(translation.x - 0.5f) * glm::cos(rotation) -
+			(translation.y - 0.5f + scale.y) * glm::sin(rotation) + 0.5f
 		);
 
-		srtMtx[1][0] = Transform.Scale.x * -glm::sin(Transform.Rotation);
-		srtMtx[1][1] = Transform.Scale.y * glm::cos(Transform.Rotation);
+		srtMtx[1][0] = scale.x * -glm::sin(rotation);
+		srtMtx[1][1] = scale.y * glm::cos(rotation);
 
 		srtMtx[1][2] = (
-			-(Transform.Translation.x - 0.5f) * glm::sin(Transform.Rotation) -
-			(Transform.Translation.y - 0.5f + Transform.Scale.y) * glm::cos(Transform.Rotation) + 0.5f
+			-(translation.x - 0.5f) * glm::sin(rotation) -
+			(translation.y - 0.5f + scale.y) * glm::cos(rotation) + 0.5f
 		);
 	}
 

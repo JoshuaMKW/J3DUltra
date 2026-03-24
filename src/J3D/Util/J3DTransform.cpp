@@ -13,38 +13,34 @@ uint16_t FloatToU16(float val) {
 }
 
 /* == J3DTransformInfo == */
-J3DTransformInfo::J3DTransformInfo()  : Scale(glm::vec3(1.0, 1.0, 1.0)), Rotation(glm::quat()), 
-	Translation(glm::vec3(0.0, 0.0, 0.0)) {
+
+void J3DTransformInfo::CalculateSRTMatrix() const {
+    mSRTMatrix = glm::translate(mTranslation) * glm::toMat4(mRotation) * glm::scale(mScale);
 }
 
 void J3DTransformInfo::Deserialize(bStream::CStream* stream) {
-	Scale.x = stream->readFloat();
-	Scale.y = stream->readFloat();
-	Scale.z = stream->readFloat();
+	mScale.x = stream->readFloat();
+	mScale.y = stream->readFloat();
+	mScale.z = stream->readFloat();
 
 	glm::vec3 eulerRotation;
 	eulerRotation.x = glm::radians(U16ToFloat(stream->readInt16()));
 	eulerRotation.y = glm::radians(U16ToFloat(stream->readInt16()));
 	eulerRotation.z = glm::radians(U16ToFloat(stream->readInt16()));
 
-	Rotation = glm::angleAxis(eulerRotation.z, glm::vec3(0.0f, 0.0f, 1.0f)) *
-			   glm::angleAxis(eulerRotation.y, glm::vec3(0.0f, 1.0f, 0.0f)) *
-			   glm::angleAxis(eulerRotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-
+	mRotation = glm::quat(eulerRotation);
 
 	stream->skip(2);
 
-	Translation.x = stream->readFloat();
-	Translation.y = stream->readFloat();
-	Translation.z = stream->readFloat();
-}
+	mTranslation.x = stream->readFloat();
+	mTranslation.y = stream->readFloat();
+	mTranslation.z = stream->readFloat();
 
-glm::mat4 J3DTransformInfo::ToMat4() {
-	return glm::translate(Translation) * glm::toMat4(Rotation) * glm::scale(Scale);
+	CalculateSRTMatrix();
 }
 
 bool J3DTransformInfo::operator==(const J3DTransformInfo& other) const {
-	return Scale == other.Scale && Rotation == other.Rotation && Translation == other.Translation;
+	return mScale == other.mScale && mRotation == other.mRotation && mTranslation == other.mTranslation;
 }
 
 bool J3DTransformInfo::operator!=(const J3DTransformInfo& other) const {
@@ -53,34 +49,30 @@ bool J3DTransformInfo::operator!=(const J3DTransformInfo& other) const {
 
 /* == J3DTextureSRTInfo == */
 void J3DTextureSRTInfo::Serialize(bStream::CStream* stream) {
-	stream->writeFloat(Scale.x);
-	stream->writeFloat(Scale.y);
+	stream->writeFloat(mScale.x);
+	stream->writeFloat(mScale.y);
 
-	stream->writeUInt16(FloatToU16(glm::degrees(Rotation)));
+	stream->writeUInt16(FloatToU16(glm::degrees(mRotation)));
 	stream->writeUInt16(UINT16_MAX);
 
-	stream->writeFloat(Translation.x);
-	stream->writeFloat(Translation.y);
+	stream->writeFloat(mTranslation.x);
+	stream->writeFloat(mTranslation.y);
 }
 
 void J3DTextureSRTInfo::Deserialize(bStream::CStream* stream) {
-	Scale.x = stream->readFloat();
-	Scale.y = stream->readFloat();
+	mScale.x = stream->readFloat();
+	mScale.y = stream->readFloat();
 
-	Rotation = glm::radians(U16ToFloat(stream->readInt16()));
+	mRotation = glm::radians(U16ToFloat(stream->readInt16()));
 
 	stream->skip(2);
 
-	Translation.x = stream->readFloat();
-	Translation.y = stream->readFloat();
-}
-
-glm::mat4 J3DTextureSRTInfo::ToMat4() {
-	return glm::identity<glm::mat4>();
+	mTranslation.x = stream->readFloat();
+	mTranslation.y = stream->readFloat();
 }
 
 bool J3DTextureSRTInfo::operator==(const J3DTextureSRTInfo& other) const {
-	return Scale == other.Scale && Rotation == other.Rotation && Translation == other.Translation;
+	return mScale == other.mScale && mRotation == other.mRotation && mTranslation == other.mTranslation;
 }
 
 bool J3DTextureSRTInfo::operator!=(const J3DTextureSRTInfo& other) const {

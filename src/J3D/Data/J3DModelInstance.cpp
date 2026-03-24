@@ -25,6 +25,7 @@ J3DModelInstance::J3DModelInstance(std::shared_ptr<J3DModelData> modelData, uint
 	mModelData = modelData;
 	mEnvelopeMatrices = mModelData->GetRestPose();
 	mReferenceFrame = glm::identity<glm::mat4>();
+    mModelMatrix = glm::identity<glm::mat4>();
 	mSortBias = 0;
 	mModelId = id;
 	bUseInstanceMaterialTable = false;
@@ -120,33 +121,32 @@ void J3DModelInstance::UpdateShapeVisibility(float deltaTime) {
 }
 
 void J3DModelInstance::Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, bool updateAnimations) {
-    if (updateAnimations) {
-        UpdateAnimations(deltaTime);
-        UpdateTEVRegisterColors(deltaTime, material);
-        UpdateMaterialTextures(deltaTime, material);
-        UpdateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
-        UpdateShapeVisibility(deltaTime);
-        CalculateJointMatrices(deltaTime);
+    if (!updateAnimations) {
+        return;
 	}
 
-	J3DUniformBufferObject::SetEnvelopeMatrices(mEnvelopeMatrices.data(), (uint32_t)mEnvelopeMatrices.size());
-	J3DUniformBufferObject::SetLights(mLights);
-
-	glm::mat4 transformMat4 = mReferenceFrame * mTransform.ToMat4();
-	J3DUniformBufferObject::SetModelMatrix(transformMat4);
+    UpdateAnimations(deltaTime);
+    UpdateTEVRegisterColors(deltaTime, material);
+    UpdateMaterialTextures(deltaTime, material);
+    UpdateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
+    UpdateShapeVisibility(deltaTime);
+    CalculateJointMatrices(deltaTime);
 }
 
 void J3DModelInstance::SetTranslation(const glm::vec3 &trans) {
-	mTransform.Translation = trans;
+	mTransform.SetTranslation(trans);
+    mModelMatrix = mReferenceFrame * mTransform.ToMat4();
 }
 
 void J3DModelInstance::SetRotation(const glm::vec3 &rot) {
     glm::vec3 eulerRotation = glm::radians(rot);
-    mTransform.Rotation = glm::quat(eulerRotation);
+    mTransform.SetRotation(glm::quat(eulerRotation));
+    mModelMatrix = mReferenceFrame * mTransform.ToMat4();
 }
 
 void J3DModelInstance::SetScale(const glm::vec3 &scale) {
-	mTransform.Scale = scale;
+    mTransform.SetScale(scale);
+    mModelMatrix = mReferenceFrame * mTransform.ToMat4();
 }
 
 void J3DModelInstance::SetTransform(const glm::mat4 &transform) {
@@ -156,9 +156,8 @@ void J3DModelInstance::SetTransform(const glm::mat4 &transform) {
 
 	glm::decompose(transform, scale, rotation, translation, skew, perspective);
 
-	mTransform.Translation = translation;
-	mTransform.Scale = scale;
-	mTransform.Rotation = rotation;
+	mTransform.SetSRT(scale, rotation, translation);
+    mModelMatrix = mReferenceFrame * mTransform.ToMat4();
 }
 
 void J3DModelInstance::GetBoundingBox(glm::vec3& min, glm::vec3& max) const {
@@ -188,38 +187,35 @@ void J3DModelInstance::SetLight(const J3DLight& light, int index) {
 }
 
 void J3DModelInstance::SetReferenceFrame(const glm::mat4 &frame) {
-	mReferenceFrame = frame;
+    mReferenceFrame = frame;
+    mModelMatrix = mReferenceFrame * mTransform.ToMat4();
 }
 
 void J3DModelInstance::GatherRenderPackets(std::vector<J3DRenderPacket>& packetList, glm::vec3 cameraPosition) {
-	glm::mat4 transformMat4 = mReferenceFrame * mTransform.ToMat4();
-
 	const shared_vector<J3DMaterial>& materials = CheckUseInstanceMaterials() ? mInstanceMaterialTable->GetMaterials() : mModelData->GetMaterials();
 
     packetList.reserve(packetList.size() + materials.size() + 1);
 
     for (const std::shared_ptr<J3DMaterial> &mat : materials)
     {
-        if (mat->GetShape().expired()) {
-            continue;
-        }
-
 		std::shared_ptr<GXShape> lockedShape = mat->GetShape().lock();
-
-		const glm::vec3& center = lockedShape->GetCenterOfMass();
-		glm::vec4 transformedCenter = transformMat4 * glm::vec4(center.x, center.y, center.z, 1.0f);
-
-		float distToCamera = glm::distance(cameraPosition, glm::vec3(transformedCenter.x, transformedCenter.y, transformedCenter.z));
-		uint32_t sortKey = static_cast<uint32_t>(distToCamera) & 0x7FFFFF;
-
-		if (mat->PEMode == EPixelEngineMode::Opaque || mat->PEMode == EPixelEngineMode::AlphaTest)
-		{
-			sortKey |= 0x00800000;
+        if (!lockedShape) {
+            continue;
 		}
 
+		const glm::vec3& center = lockedShape->GetCenterOfMass();
+		glm::vec4 transformedCenter = mModelMatrix * glm::vec4(center, 1.0f);
+
+		float distToCamera = glm::distance(cameraPosition, glm::vec3(transformedCenter));
+		uint32_t sortKey = static_cast<uint32_t>(distToCamera) & 0x7FFFFF;
+
+		const bool isOpaqueOrAlpha =
+            (mat->PEMode == EPixelEngineMode::Opaque || mat->PEMode == EPixelEngineMode::AlphaTest);
+
+        sortKey |= (isOpaqueOrAlpha ? 0x00800000 : 0);
 		sortKey |= mSortBias << 24;
 
-		packetList.push_back({ sortKey, mat, this });
+		packetList.emplace_back(sortKey, mat, this);
 	}
 }
 
@@ -251,14 +247,11 @@ void J3DModelInstance::UpdateAnimations(float deltaTime) {
 
 void J3DModelInstance::Render(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride)
 {
-	J3DUniformBufferObject::SetEnvelopeMatrices(mEnvelopeMatrices.data(),
-		(uint32_t)mEnvelopeMatrices.size());
+	J3DUniformBufferObject::SetEnvelopeMatrices(mEnvelopeMatrices.data(), (uint32_t)mEnvelopeMatrices.size());
 	J3DUniformBufferObject::SetLights(mLights);
-
-	glm::mat4 transformMat4 = mReferenceFrame * mTransform.ToMat4();
-	J3DUniformBufferObject::SetModelMatrix(transformMat4);
-
+	J3DUniformBufferObject::SetModelMatrix(mModelMatrix);
 	J3DUniformBufferObject::SetModelId(mModelId);
+
 	mModelData->BindVAO();
 
 	auto& textures = CheckUseInstanceTextures() ? mInstanceMaterialTable->GetTextures() : mModelData->GetTextures();

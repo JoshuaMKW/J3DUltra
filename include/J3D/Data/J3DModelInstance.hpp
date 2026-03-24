@@ -35,6 +35,8 @@ class J3DModelInstance {
 
     // Transform applied to the model-space transform stored in mTransform.
     glm::mat4 mReferenceFrame;
+    // Final model matrix cached
+    glm::mat4 mModelMatrix;
 
     // Lights applied to this model instance
     J3DLight mLights[8];
