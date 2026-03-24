@@ -5,12 +5,12 @@
 
 #include <glm/glm.hpp>
 
-const glm::mat4 HERMITE_MTX(
-    2.0f, -2.0f, 1.0f, 1.0f,
-    -3.0f, 3.0f, -2.0f, -1.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    1.0f, 0.0f, 0.0f, 0.0f
-);
+//const glm::mat4 HERMITE_MTX(
+//    2.0f, -2.0f, 1.0f, 1.0f,
+//    -3.0f, 3.0f, -2.0f, -1.0f,
+//    0.0f, 0.0f, 1.0f, 0.0f,
+//    1.0f, 0.0f, 0.0f, 0.0f
+//);
 
 J3DAnimation::J3DHermiteAnimationTrack::J3DHermiteAnimationTrack() {
 
@@ -21,19 +21,23 @@ J3DAnimation::J3DHermiteAnimationTrack::~J3DHermiteAnimationTrack() {
 }
 
 float J3DAnimation::J3DHermiteAnimationTrack::GetValue(float time) const {
-    if (mKeys.size() == 1) {
-        return mKeys[0].Value;
+    if (mKeys.size() <= 1) {
+        return mKeys.empty() ? 0.0f : mKeys[0].Value;
     }
 
-    size_t index = 1;
-    while (mKeys[index].Time < time) {
-        index++;
-        if (index >= mKeys.size()) {
-            index = mKeys.size() - 1;
-            time = mKeys[index].Time;
+    auto it = std::upper_bound(mKeys.begin(), mKeys.end(), time,
+        [](float t, const J3DAnimationKey& key) {
+            return t < key.Time;
+        });
 
-            break;
-        }
+    const size_t index = std::distance(mKeys.begin(), it);
+
+    if (index == mKeys.size()) {
+        return mKeys.back().Value;
+    }
+
+    if (index == 0) {
+        return mKeys.front().Value;
     }
 
     const J3DAnimationKey* firstKey = &mKeys[index - 1];
@@ -44,15 +48,22 @@ float J3DAnimation::J3DHermiteAnimationTrack::GetValue(float time) const {
 }
 
 float J3DAnimation::J3DHermiteAnimationTrack::InterpolateValue(float time, const J3DAnimationKey* a, const J3DAnimationKey* b) const {
-    float framesBetweenKeys = b->Time - a->Time;
-    
-    glm::vec4 timeParameters = glm::vec4(time * time * time, time * time, time, 1.0f);
-    glm::vec4 valueParameters = glm::vec4(a->Value, b->Value, a->OutTangent * framesBetweenKeys, b->InTangent * framesBetweenKeys);
+    const float framesBetweenKeys = b->Time - a->Time;
 
-    glm::vec4 transform = HERMITE_MTX * timeParameters;
-    glm::vec4 result = transform * valueParameters;
+    const float t2 = time * time;
+    const float t3 = t2 * time;
 
-    return result.x + result.y + result.z + result.w;
+    const float h00 = 2.0f * t3 - 3.0f * t2 + 1.0f;
+    const float h01 = -2.0f * t3 + 3.0f * t2;
+    const float h10 = t3 - 2.0f * t2 + time;
+    const float h11 = t3 - t2;
+
+    const float p0 = a->Value;
+    const float p1 = b->Value;
+    const float m0 = a->OutTangent * framesBetweenKeys;
+    const float m1 = b->InTangent * framesBetweenKeys;
+
+    return (h00 * p0) + (h01 * p1) + (h10 * m0) + (h11 * m1);
 }
 
 void J3DAnimation::J3DHermiteAnimationTrack::ReserveKeys(size_t capacity)
