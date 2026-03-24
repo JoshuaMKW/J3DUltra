@@ -22,7 +22,7 @@ class J3DSkeleton {
 	std::vector<glm::mat4x4> mInverseBindMatrices;
 
 	// DRW1 data, maps shapes to skinning envelopes
-	std::vector<bool> mDrawBools;
+	std::vector<char> mDrawBools;  // std::vector<bool> has performance issues
 	std::vector<uint16_t> mEnvelopeIndices;
 
 	// JNT1 data, joints

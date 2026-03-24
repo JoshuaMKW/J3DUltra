@@ -28,6 +28,9 @@ J3DModelInstance::J3DModelInstance(std::shared_ptr<J3DModelData> modelData, uint
 	mSortBias = 0;
 	mModelId = id;
 	bUseInstanceMaterialTable = false;
+
+	mBBMin = { 0, 0, 0 };
+    mBBMax = { 0, 0, 0 };
 }
 
 J3DModelInstance::~J3DModelInstance() {
