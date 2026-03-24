@@ -32,6 +32,10 @@ class J3DSkeleton {
 	// Calculated envelopes for the model's rest pose
 	std::vector<glm::mat4> mRestPose;
 
+	// Cached allocations and computations
+    std::vector<glm::mat4> mSkinningMatricesCache;
+    std::vector<glm::mat4> mAnimTransformsCache;
+
 public:
 	J3DSkeleton();
 
