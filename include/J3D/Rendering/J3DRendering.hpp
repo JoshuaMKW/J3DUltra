@@ -18,7 +18,7 @@ namespace J3D {
         RenderPacketVector SortPackets(ModelInstanceVector& modelInstances, glm::vec3 cameraPosition);
 
         void Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix,
-                    RenderPacketVector& modelInstances);
+                    RenderPacketVector& modelInstances, bool updateAnimations = true);
 
         // Call this after Render to reuse the model calculations view/proj matrices for static rendering.
         // Note: This is used by J3D::Picking

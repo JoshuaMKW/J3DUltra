@@ -36,13 +36,13 @@ J3D::Rendering::RenderPacketVector J3D::Rendering::SortPackets(ModelInstanceVect
     return packets;
 }
 
-void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, RenderPacketVector& renderPackets) {
+void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, RenderPacketVector& renderPackets, bool updateAnimations) {
     //for (J3DRenderPacket &packet : renderPackets) {
     //    packet.Update(deltaTime, viewMatrix, projMatrix);
     //}
 
-    std::for_each(std::execution::par_unseq, renderPackets.begin(), renderPackets.end(), [&deltaTime, &viewMatrix, &projMatrix](J3DRenderPacket& packet) {
-        packet.Update(deltaTime, viewMatrix, projMatrix);
+    std::for_each(std::execution::par_unseq, renderPackets.begin(), renderPackets.end(), [&deltaTime, &viewMatrix, &projMatrix, updateAnimations](J3DRenderPacket& packet) {
+        packet.Update(deltaTime, viewMatrix, projMatrix, updateAnimations);
     });
 }
 

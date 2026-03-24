@@ -119,13 +119,15 @@ void J3DModelInstance::UpdateShapeVisibility(float deltaTime) {
 	}
 }
 
-void J3DModelInstance::Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix) {
-    UpdateAnimations(deltaTime);
-	UpdateTEVRegisterColors(deltaTime, material);
-	UpdateMaterialTextures(deltaTime, material);
-	UpdateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
-	UpdateShapeVisibility(deltaTime);
-	CalculateJointMatrices(deltaTime);
+void J3DModelInstance::Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, bool updateAnimations) {
+    if (updateAnimations) {
+        UpdateAnimations(deltaTime);
+        UpdateTEVRegisterColors(deltaTime, material);
+        UpdateMaterialTextures(deltaTime, material);
+        UpdateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
+        UpdateShapeVisibility(deltaTime);
+        CalculateJointMatrices(deltaTime);
+	}
 
 	J3DUniformBufferObject::SetEnvelopeMatrices(mEnvelopeMatrices.data(), (uint32_t)mEnvelopeMatrices.size());
 	J3DUniformBufferObject::SetLights(mLights);
