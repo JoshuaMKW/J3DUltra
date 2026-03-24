@@ -59,7 +59,7 @@ void J3DSkeleton::CalculateAnimJointPose(const std::vector<glm::mat4>& transform
     }
 
     const size_t limit = std::min(transforms.size(), mInverseBindMatrices.size());
-    for (size_t i = 0; i < mSkinningMatricesCache.size(); ++i) {
+    for (size_t i = 0; i < limit; ++i) {
         mSkinningMatricesCache[i] = transforms[i] * mInverseBindMatrices[i];
     }
 
