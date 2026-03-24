@@ -84,7 +84,11 @@ std::shared_ptr<GXShape> J3DShapeFactory::Create(bStream::CStream* stream, uint3
 			for (int j = 0; j < vtxCount; j++) {
 				ModernVertex newVtx;
 
-				for (auto attribute : vertexAttributes) {
+				const size_t numAttributes = vertexAttributes.size();
+				for (size_t i = 0; i < numAttributes; ++i) {
+					// Force the load of a full structure from a valid index, defeating flawed data aliasing math
+					const J3DVCDData &attribute = vertexAttributes[i];
+
 					uint16_t value = 0;
 
 					// Read the index value
