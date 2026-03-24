@@ -34,7 +34,6 @@ class J3DSkeleton {
 
 	// Cached allocations and computations
     std::vector<glm::mat4> mSkinningMatricesCache;
-    std::vector<glm::mat4> mAnimTransformsCache;
 
 public:
 	J3DSkeleton();
@@ -49,5 +48,5 @@ public:
 	void SetRootJoint(std::shared_ptr<J3DJoint> jnt) { mRootJoint = jnt; }
 
 	void CalculateRestPose();
-	std::vector<glm::mat4> CalculateAnimJointPose(const std::vector<glm::mat4>& transforms);
+	void CalculateAnimJointPose(const std::vector<glm::mat4>& transforms, std::vector<glm::mat4> &out);
 };

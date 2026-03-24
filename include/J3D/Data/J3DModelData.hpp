@@ -74,7 +74,7 @@ public:
 	const std::vector<J3DEnvelope>& GetJointEnvelopes() const { return mSkeleton->GetJointEnvelopes(); }
 	shared_vector<J3DJoint>& GetJoints() { return mSkeleton->GetJoints(); }
 
-	std::vector<glm::mat4> CalculateAnimJointPose(const std::vector<glm::mat4>& transforms) { return mSkeleton->CalculateAnimJointPose(transforms); }
+	void CalculateAnimJointPose(const std::vector<glm::mat4>& transforms, std::vector<glm::mat4> &out) { mSkeleton->CalculateAnimJointPose(transforms, out); }
 
 	/* Returns the material at the given index, or an empty shared_ptr if it does not exist. */
 	std::shared_ptr<J3DMaterial> GetMaterial(uint32_t idx) { return mMaterialTable->GetMaterial(idx); }

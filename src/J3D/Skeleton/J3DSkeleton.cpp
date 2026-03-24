@@ -49,13 +49,13 @@ void J3DSkeleton::CalculateRestPose() {
     }
 }
 
-std::vector<glm::mat4> J3DSkeleton::CalculateAnimJointPose(const std::vector<glm::mat4>& transforms) {
+void J3DSkeleton::CalculateAnimJointPose(const std::vector<glm::mat4>& transforms, std::vector<glm::mat4> &out) {
     if (mSkinningMatricesCache.size() < transforms.size()) {
         mSkinningMatricesCache.resize(transforms.size());
     }
 
-    if (mAnimTransformsCache.size() < mEnvelopeIndices.size()) {
-        mAnimTransformsCache.resize(mEnvelopeIndices.size());
+    if (out.size() < mEnvelopeIndices.size()) {
+        out.resize(mEnvelopeIndices.size());
     }
 
     const size_t limit = std::min(transforms.size(), mInverseBindMatrices.size());
@@ -65,7 +65,7 @@ std::vector<glm::mat4> J3DSkeleton::CalculateAnimJointPose(const std::vector<glm
 
     for (int i = 0; i < mEnvelopeIndices.size(); i++) {
         if (mDrawBools[i] == false) {
-            mAnimTransformsCache[i] = transforms[mEnvelopeIndices[i]];
+            out[i] = transforms[mEnvelopeIndices[i]];
         }
         else {
             glm::mat4 matrix = glm::zero<glm::mat4>();
@@ -78,9 +78,7 @@ std::vector<glm::mat4> J3DSkeleton::CalculateAnimJointPose(const std::vector<glm
                 matrix += mSkinningMatricesCache[jointIndex] * env.Weights[j];
             }
 
-            mAnimTransformsCache[i] = matrix;
+            out[i] = matrix;
         }
     }
-
-    return mAnimTransformsCache;
 }
