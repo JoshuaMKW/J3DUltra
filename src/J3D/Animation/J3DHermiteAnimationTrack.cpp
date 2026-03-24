@@ -25,12 +25,19 @@ float J3DAnimation::J3DHermiteAnimationTrack::GetValue(float time) const {
         return mKeys.empty() ? 0.0f : mKeys[0].Value;
     }
 
-    auto it = std::upper_bound(mKeys.begin(), mKeys.end(), time,
-        [](float t, const J3DAnimationKey& key) {
-            return t < key.Time;
-        });
+    size_t left = 0;
+    size_t right = mKeys.size();
 
-    const size_t index = std::distance(mKeys.begin(), it);
+    while (left < right) {
+        size_t mid = left + (right - left) / 2;
+        if (mKeys[mid].Time <= time) {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+
+    const size_t index = left;
 
     if (index == mKeys.size()) {
         return mKeys.back().Value;
