@@ -68,7 +68,7 @@ void J3DModelInstance::CalculateJointMatrices(float deltaTime) {
 		}
 	}
 
-	mModelData->CalculateAnimJointPose(t, mEnvelopeMatrices);
+	mModelData->CalculateAnimJointPose(t, mSkinningMatricesCache, mEnvelopeMatrices);
 }
 
 void J3DModelInstance::AnimateMaterialTextureMatrices(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix) {

@@ -78,6 +78,9 @@ class J3DModelInstance {
     bool CheckUseInstanceMaterials() const;
     bool CheckUseInstanceTextures() const;
 
+    // Cached allocations and computations
+    std::vector<glm::mat4> mSkinningMatricesCache;
+
 public:
     J3DModelInstance(std::shared_ptr<J3DModelData> modelData, uint16_t id);
     virtual ~J3DModelInstance();
