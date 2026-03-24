@@ -41,7 +41,7 @@ void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& p
     //    packet.Update(deltaTime, viewMatrix, projMatrix);
     //}
 
-    std::for_each(std::execution::par_unseq, renderPackets.begin(), renderPackets.end(), [&deltaTime, &viewMatrix, &projMatrix, updateAnimations](J3DRenderPacket& packet) {
+    std::for_each(std::execution::par, renderPackets.begin(), renderPackets.end(), [&deltaTime, &viewMatrix, &projMatrix, updateAnimations](J3DRenderPacket& packet) {
         packet.Update(deltaTime, viewMatrix, projMatrix, updateAnimations);
     });
 }
