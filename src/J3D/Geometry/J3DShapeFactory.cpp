@@ -209,6 +209,9 @@ std::shared_ptr<GXShape> J3DShapeFactory::Create(bStream::CStream* stream, uint3
 							newVtx.TexCoords[7].y = texCoord.y;
 							break;
 						}
+						case EGXAttribute::Null:
+						default:
+							continue;
 					}
 				}
 
@@ -238,12 +241,12 @@ uint16_t J3DShapeFactory::ConvertPosMtxIndexToDrawIndex(bStream::CStream* stream
 	uint32_t currentStreamPos = (uint32_t)stream->tell();
 	stream->seek(mBlock->MatrixInitTableOffset + (initData.MatrixOffset * sizeof(J3DShapeMatrixInitData)));
 
-	uint32_t matrixInitIndex = initData.MatrixOffset + packetIndex;
+	int32_t matrixInitIndex = initData.MatrixOffset + packetIndex;
 	J3DShapeMatrixInitData matrixInitData;
 
 	while (matrixInitIndex >= 0) {
 		// Grab the matrix data
-		ReadMatrixInitData(stream, matrixInitData, matrixInitIndex * sizeof(J3DShapeMatrixInitData));
+		ReadMatrixInitData(stream, matrixInitData, static_cast<uint32_t>(matrixInitIndex * sizeof(J3DShapeMatrixInitData)));
 
 		// calculate the offset to read from
 		uint32_t matrixTableOffset = mBlock->MatrixTableOffset + (matrixInitData.Start + value) * sizeof(uint16_t);
