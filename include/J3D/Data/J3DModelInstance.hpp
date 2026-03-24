@@ -44,20 +44,23 @@ class J3DModelInstance {
     // Recalculates joint transforms based on a load animation - BCK for keyframes at discrete time units, BCA for values at every frame.
     void CalculateJointMatrices(float deltaTime);
     // Recalculates texture transforms based on a loaded BTK animation.
-    void UpdateMaterialTextureMatrices(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix);
+    void AnimateMaterialTextureMatrices(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix);
 
     // Updates material textures based on a loaded BTP animation.
-    void UpdateMaterialTextures(float deltaTime, std::shared_ptr<J3DMaterial> material);
+    void AnimateMaterialTextures(float deltaTime, std::shared_ptr<J3DMaterial> material);
 
     // Updates material colors based on a loaded BPK animation.
     void UpdateMaterialColors(float deltaTime);
     // Updates TEV register colors based on a loaded BRK animation.
-    void UpdateTEVRegisterColors(float deltaTime, std::shared_ptr<J3DMaterial> material);
+    void AnimateTEVRegisterColors(float deltaTime, std::shared_ptr<J3DMaterial> material);
 
     // Updates shape visibility based on a loaded BVA animation.
-    void UpdateShapeVisibility(float deltaTime);
+    void AnimateShapeVisibility(float deltaTime);
 
-    void UpdateAnimations(float deltaTime);
+    // Updates joint matrices based on a loaded BCK animation.
+    void AnimateJointMatrices(float deltaTime);
+
+    void TickAnimations(float deltaTime);
 
     std::shared_ptr<J3DAnimation::J3DColorAnimationInstance> mRegisterColorAnimation;
     std::shared_ptr<J3DAnimation::J3DTexIndexAnimationInstance> mTexIndexAnimation;

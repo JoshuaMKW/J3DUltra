@@ -42,16 +42,6 @@ void J3DModelInstance::CalculateJointMatrices(float deltaTime) {
 	if (mJointAnimation == nullptr && mJointFullAnimation == nullptr) {
 		return;
 	}
-
-	if (mJointAnimation != nullptr) {
-		mJointAnimation->GetTransformsAtFrame(deltaTime, mAnimationMatrices);
-	}
-	else if (mJointFullAnimation != nullptr) {
-		mJointFullAnimation->GetTransformsAtFrame(deltaTime, mAnimationMatrices);
-	}
-	else {
-		mAnimationMatrices.assign(mModelData->GetJoints().size(), glm::identity<glm::mat4>());
-	}
         
 	std::vector<glm::mat4> t(mModelData->GetJoints().size());
 
@@ -81,15 +71,15 @@ void J3DModelInstance::CalculateJointMatrices(float deltaTime) {
 	mModelData->CalculateAnimJointPose(t, mEnvelopeMatrices);
 }
 
-void J3DModelInstance::UpdateMaterialTextureMatrices(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix) {
-	if (mTexMatrixAnimation != nullptr) {
-		mTexMatrixAnimation->ApplyAnimation(material);
+void J3DModelInstance::AnimateMaterialTextureMatrices(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix) {
+	if (mTexMatrixAnimation == nullptr) {
+        return;
 	}
-
-	material->CalculateTexMatrices(mTransform.ToMat4(), viewMatrix, projMatrix);
+	
+	mTexMatrixAnimation->ApplyAnimation(material);
 }
 
-void J3DModelInstance::UpdateMaterialTextures(float deltaTime, std::shared_ptr<J3DMaterial> material) {
+void J3DModelInstance::AnimateMaterialTextures(float deltaTime, std::shared_ptr<J3DMaterial> material) {
 	if (mTexIndexAnimation == nullptr) {
 		return;
 	}
@@ -101,7 +91,7 @@ void J3DModelInstance::UpdateMaterialColors(float deltaTime) {
 	// TODO: implement BPK
 }
 
-void J3DModelInstance::UpdateTEVRegisterColors(float deltaTime, std::shared_ptr<J3DMaterial> material) {
+void J3DModelInstance::AnimateTEVRegisterColors(float deltaTime, std::shared_ptr<J3DMaterial> material) {
 	if (mRegisterColorAnimation == nullptr) {
 		return;
 	}
@@ -109,7 +99,7 @@ void J3DModelInstance::UpdateTEVRegisterColors(float deltaTime, std::shared_ptr<
 	mRegisterColorAnimation->ApplyAnimation(material);
 }
 
-void J3DModelInstance::UpdateShapeVisibility(float deltaTime) {
+void J3DModelInstance::AnimateShapeVisibility(float deltaTime) {
 	if (mVisibilityAnimation == nullptr) {
 		return;
 	}
@@ -121,16 +111,17 @@ void J3DModelInstance::UpdateShapeVisibility(float deltaTime) {
 }
 
 void J3DModelInstance::Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, bool updateAnimations) {
-    if (!updateAnimations) {
-        return;
+    if (updateAnimations) {
+		TickAnimations(deltaTime);
+		AnimateTEVRegisterColors(deltaTime, material);
+		AnimateMaterialTextures(deltaTime, material);
+		AnimateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
+		AnimateShapeVisibility(deltaTime);
+        AnimateJointMatrices(deltaTime);
+		CalculateJointMatrices(deltaTime);
 	}
 
-    UpdateAnimations(deltaTime);
-    UpdateTEVRegisterColors(deltaTime, material);
-    UpdateMaterialTextures(deltaTime, material);
-    UpdateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
-    UpdateShapeVisibility(deltaTime);
-    CalculateJointMatrices(deltaTime);
+    material->CalculateTexMatrices(mTransform.ToMat4(), viewMatrix, projMatrix);
 }
 
 void J3DModelInstance::SetTranslation(const glm::vec3 &trans) {
@@ -219,7 +210,18 @@ void J3DModelInstance::GatherRenderPackets(std::vector<J3DRenderPacket>& packetL
 	}
 }
 
-void J3DModelInstance::UpdateAnimations(float deltaTime) {
+void J3DModelInstance::AnimateJointMatrices(float deltaTime) {
+    if (mJointAnimation != nullptr) {
+        mJointAnimation->GetTransformsAtFrame(deltaTime, mAnimationMatrices);
+    } else if (mJointFullAnimation != nullptr) {
+        mJointFullAnimation->GetTransformsAtFrame(deltaTime, mAnimationMatrices);
+    } else {
+        mAnimationMatrices.assign(mModelData->GetJoints().size(), glm::identity<glm::mat4>());
+	}
+}
+
+void J3DModelInstance::TickAnimations(float deltaTime)
+{
 	if (mRegisterColorAnimation != nullptr) {
 		mRegisterColorAnimation->Tick(deltaTime);
 	}
