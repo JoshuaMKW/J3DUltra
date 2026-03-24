@@ -102,7 +102,7 @@ namespace J3D {
             glClearBufferuiv(GL_COLOR, 0, &DATA_RESET);
             glClearBufferfv(GL_DEPTH, 0, &DEPTH_RESET);
 
-            J3D::Rendering::StaticRender(renderPackets, mPickingShaderId);
+            J3D::Rendering::Render(renderPackets, mPickingShaderId);
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }

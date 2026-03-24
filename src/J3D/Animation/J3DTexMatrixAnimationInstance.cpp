@@ -186,16 +186,16 @@ void J3DAnimation::J3DTexMatrixAnimationInstance::ApplyAnimation(std::shared_ptr
 
         texMat->Origin = t.Origin;
 
-        texMat->Transform.Translation = glm::vec3(
+        texMat->Transform.SetTranslation(glm::vec3(
             t.TranslationS.GetValue(frameTime),
             t.TranslationT.GetValue(frameTime),
             t.TranslationQ.GetValue(frameTime)
-        );
-        texMat->Transform.Scale = glm::vec3(
+        ));
+        texMat->Transform.SetScale(glm::vec3(
             t.ScaleS.GetValue(frameTime),
             t.ScaleT.GetValue(frameTime),
             t.ScaleQ.GetValue(frameTime)
-        );
+        ));
         //texMat.Transform.Rotation = glm::vec3(
         //);
     }

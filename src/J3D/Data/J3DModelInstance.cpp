@@ -215,7 +215,7 @@ void J3DModelInstance::GatherRenderPackets(std::vector<J3DRenderPacket>& packetL
         sortKey |= (isOpaqueOrAlpha ? 0x00800000 : 0);
 		sortKey |= mSortBias << 24;
 
-		packetList.emplace_back(sortKey, mat, this);
+        packetList.emplace_back(J3DRenderPacket { sortKey, mat, this });
 	}
 }
 
