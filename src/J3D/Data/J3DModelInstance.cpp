@@ -215,9 +215,7 @@ void J3DModelInstance::AnimateJointMatrices(float deltaTime) {
         mJointAnimation->GetTransformsAtFrame(deltaTime, mAnimationMatrices);
     } else if (mJointFullAnimation != nullptr) {
         mJointFullAnimation->GetTransformsAtFrame(deltaTime, mAnimationMatrices);
-    } else {
-        mAnimationMatrices.assign(mModelData->GetJoints().size(), glm::identity<glm::mat4>());
-	}
+    }
 }
 
 void J3DModelInstance::TickAnimations(float deltaTime)
