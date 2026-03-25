@@ -50,10 +50,6 @@ void J3DSkeleton::CalculateRestPose() {
 }
 
 void J3DSkeleton::CalculateAnimJointPose(const std::vector<glm::mat4>& transforms, std::vector<glm::mat4>& skinningMatrices, std::vector<glm::mat4>& out) {
-    if (skinningMatrices.size() < transforms.size()) {
-        skinningMatrices.resize(transforms.size());
-    }
-
     if (out.size() < mEnvelopeIndices.size()) {
         out.resize(mEnvelopeIndices.size());
     }

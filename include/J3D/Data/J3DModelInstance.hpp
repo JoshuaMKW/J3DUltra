@@ -79,6 +79,7 @@ class J3DModelInstance {
     bool CheckUseInstanceTextures() const;
 
     // Cached allocations and computations
+    std::vector<glm::mat4> mTransformsCache;
     std::vector<glm::mat4> mSkinningMatricesCache;
 
 public:

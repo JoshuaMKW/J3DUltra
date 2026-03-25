@@ -42,8 +42,6 @@ void J3DModelInstance::CalculateJointMatrices(float deltaTime) {
 	if (mJointAnimation == nullptr && mJointFullAnimation == nullptr) {
 		return;
 	}
-        
-	std::vector<glm::mat4> t(mModelData->GetJoints().size());
 
     for (size_t i = 0; i < mModelData->GetJoints().size(); ++i) {
         const std::shared_ptr<J3DJoint>& jnt = mModelData->GetJoints()[i];
@@ -61,14 +59,14 @@ void J3DModelInstance::CalculateJointMatrices(float deltaTime) {
 			// Multiply local transform by the parent's ALREADY CALCULATED global transform
 			// (Assuming parent is guaranteed to have a lower index than the child)
 			uint32_t parentID = std::static_pointer_cast<J3DJoint>(parent)->GetJointID();
-			t[i] = t[parentID] * localTransform; 
+            mTransformsCache[i] = mTransformsCache[parentID] * localTransform; 
 		} else {
 			// It's the root bone
-			t[i] = localTransform;
+            mTransformsCache[i] = localTransform;
 		}
 	}
 
-	mModelData->CalculateAnimJointPose(t, mSkinningMatricesCache, mEnvelopeMatrices);
+	mModelData->CalculateAnimJointPose(mTransformsCache, mSkinningMatricesCache, mEnvelopeMatrices);
 }
 
 void J3DModelInstance::AnimateMaterialTextureMatrices(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix) {
@@ -274,6 +272,12 @@ void J3DModelInstance::SetJointAnimation(std::shared_ptr<J3DAnimation::J3DJointA
     }
 
 	mJointAnimation = anim;
+
+	if (mJointAnimation) {
+        mAnimationMatrices.resize(mJointAnimation->GetEntries().size());
+        mTransformsCache.resize(mModelData->GetJointCount());
+        mSkinningMatricesCache.resize(mModelData->GetJointCount());
+	}
 }
 
 void J3DModelInstance::SetJointFullAnimation(std::shared_ptr<J3DAnimation::J3DJointFullAnimationInstance> anim) {
@@ -282,4 +286,10 @@ void J3DModelInstance::SetJointFullAnimation(std::shared_ptr<J3DAnimation::J3DJo
     }
 
 	mJointFullAnimation = anim;
+
+    if (mJointFullAnimation) {
+        mAnimationMatrices.resize(mJointFullAnimation->GetEntries().size());
+        mTransformsCache.resize(mModelData->GetJointCount());
+        mSkinningMatricesCache.resize(mModelData->GetJointCount());
+    }
 }
