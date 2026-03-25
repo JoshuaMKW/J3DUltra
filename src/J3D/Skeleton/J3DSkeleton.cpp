@@ -50,8 +50,8 @@ void J3DSkeleton::CalculateRestPose() {
 }
 
 void J3DSkeleton::CalculateAnimJointPose(const std::vector<glm::mat4>& transforms, std::vector<glm::mat4>& skinningMatrices, std::vector<glm::mat4>& out) {
-    if (out.size() < mEnvelopeIndices.size()) {
-        out.resize(mEnvelopeIndices.size());
+    if (out.size() != mEnvelopeIndices.size()) {
+        return;
     }
 
     const size_t limit = std::min(transforms.size(), mInverseBindMatrices.size());

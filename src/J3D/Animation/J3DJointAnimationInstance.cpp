@@ -145,7 +145,7 @@ void J3DAnimation::J3DJointAnimationInstance::GetTransformsAtFrame(float deltaTi
     float frameTime = GetFrame();
 
     if (out.size() != mEntries.size()) {
-        out.resize(mEntries.size());
+        return;
     }
 
     size_t i = 0;
