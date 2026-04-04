@@ -178,6 +178,11 @@ std::string J3DFragmentShaderGenerator::GenerateMainFunction(J3DMaterial* materi
 
 	stream << GenerateAlphaCompare(material->PEBlock.mAlphaCompare);
 	stream << "\n\tPixelColor = VecS10ToFloat(TevPrev) + HighlightColor;\n";
+
+	if (((int)material->PEMode & (int)EPixelEngineMode::Opaque) == (int)EPixelEngineMode::Opaque) {
+        stream << "\n\tPixelColor.a = 255;\n";
+	}
+
 	stream << "}\n";
 
 	return stream.str();
