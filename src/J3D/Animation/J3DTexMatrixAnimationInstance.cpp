@@ -169,7 +169,7 @@ void J3DAnimation::J3DTexMatrixAnimationInstance::Deserialize(bStream::CStream& 
 }
 
 void J3DAnimation::J3DTexMatrixAnimationInstance::ApplyAnimation(std::shared_ptr<J3DMaterial> material) {
-    auto texMatrices = material->TexGenBlock.mTexMatrix;
+    const shared_vector<J3DTexMatrixInfo> &texMatrices = material->TexGenBlock.mTexMatrix;
 
     for (int i = 0; i < texMatrices.size(); i++) {
         material->AnimationTexMatrixInfo[i] = *texMatrices[i];
@@ -177,7 +177,7 @@ void J3DAnimation::J3DTexMatrixAnimationInstance::ApplyAnimation(std::shared_ptr
 
     float frameTime = GetFrame();
 
-    for (auto t : mEntries) {
+    for (const J3DTexMatrixAnimationData &t : mEntries) {
         if (t.MaterialName != material->Name) {
             continue;
         }
