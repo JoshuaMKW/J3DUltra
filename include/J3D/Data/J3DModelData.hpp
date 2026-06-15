@@ -62,6 +62,8 @@ class J3DModelData : public std::enable_shared_from_this<J3DModelData> {
 
 public:
 	J3DModelData();
+    J3DModelData(const J3DModelData& other);
+	J3DModelData(J3DModelData&& other) noexcept;
 	virtual ~J3DModelData();
 
 	std::shared_ptr<J3DModelInstance> CreateInstance();

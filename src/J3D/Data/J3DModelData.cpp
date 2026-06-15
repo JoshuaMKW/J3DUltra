@@ -15,6 +15,50 @@ std::atomic<uint16_t> J3DModelData::sInstanceIdSrc = 1;
 J3DModelData::J3DModelData() {
     mSkeleton = std::make_shared<J3DSkeleton>();
     mMaterialTable = std::make_shared<J3DMaterialTable>();
+
+    mFlags = 0;
+    mMatrixGroupCount = 0;
+
+    mBBMin = {};
+    mBBMax = {};
+}
+
+J3DModelData::J3DModelData(const J3DModelData& other) {
+    mFlags = other.mFlags;
+    mMatrixGroupCount = other.mMatrixGroupCount;
+    mHierarchyNodes = other.mHierarchyNodes;
+
+    mVertexData = other.mVertexData;
+    mGeometry = other.mGeometry;
+
+    mBBMin = other.mBBMin;
+    mBBMax = other.mBBMax;
+
+    mGXVertices = other.mGXVertices;
+    mGLVertices = other.mGLVertices;
+    mIndices = other.mIndices;
+
+    mSkeleton = std::make_shared<J3DSkeleton>(*other.mSkeleton);
+    mMaterialTable = std::make_shared<J3DMaterialTable>(*other.mMaterialTable);
+}
+
+J3DModelData::J3DModelData(J3DModelData&& other) noexcept {
+    mFlags = other.mFlags;
+    mMatrixGroupCount = other.mMatrixGroupCount;
+    mHierarchyNodes = std::move(other.mHierarchyNodes);
+
+    mVertexData = std::move(other.mVertexData);
+    mGeometry = std::move(other.mGeometry);
+
+    mBBMin = other.mBBMin;
+    mBBMax = other.mBBMax;
+
+    mGXVertices = std::move(other.mGXVertices);
+    mGLVertices = std::move(other.mGLVertices);
+    mIndices = std::move(other.mIndices);
+
+    mSkeleton = std::move(other.mSkeleton);
+    mMaterialTable = std::move(other.mMaterialTable);
 }
 
 J3DModelData::~J3DModelData() {
