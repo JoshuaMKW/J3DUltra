@@ -132,6 +132,7 @@ public:
     void SetSortBias(uint8_t bias) { mSortBias = bias; }
     uint8_t GetSortBias() const { return mSortBias; }
 
+    std::shared_ptr<const J3DModelData> GetModelData() const { return mModelData; }
     // Returns this model's unique ID.
     uint16_t GetModelId() const { return mModelId; }
 };
