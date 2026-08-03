@@ -217,6 +217,7 @@ void J3DMaterial::BindJ3DShader(const std::vector<std::shared_ptr<J3DTexture>>& 
 #if _DEBUG
             std::cout << "Warning: Texture at index " << texIndex << " is null or has an invalid OpenGL handle." << std::endl;
 #endif
+            continue;
         }
 
         glBindTextureUnit(i, texture->TexHandle);
