@@ -353,7 +353,7 @@ glm::mat4 J3DTexMatrixInfo::CalculateViewProjMatrix(const glm::mat4& projMtx) {
 	pMtx[2][2] = projMtx[2][3];
 	pMtx[3][2] = projMtx[3][3];
 
-	return glm::transpose(pMtx);
+	return pMtx;
 }
 
 void J3DTexMatrixInfo::CalculateEffectMatrix(const glm::mat4 inputMtx, const glm::mat4& srtMtx, const glm::mat4& modelMtx, const glm::mat4& projMtx) {
