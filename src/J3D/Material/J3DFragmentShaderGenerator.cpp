@@ -254,7 +254,8 @@ std::string J3DFragmentShaderGenerator::GenerateTextureColor(J3DMaterial* materi
 				case EGXIndirectTexMatrixId::IndTexMtx_0:
 				case EGXIndirectTexMatrixId::IndTexMtx_1:
 				case EGXIndirectTexMatrixId::IndTexMtx_2:
-					stream << "IndTexMatrices[" << etoi(indTevStage->TexMtxId) - 1 << "] * VecS10ToFloat(IndLookupCoords);\n";
+					// Don't use VecS10ToFloat() here since the indirect texture look up is centered around 0
+					stream << "IndTexMatrices[" << etoi(indTevStage->TexMtxId) - 1 << "] * (vec4(IndLookupCoords) / 255.0);\n";
 					break;
 				default:
 					stream << "vec4(0.0);\n";

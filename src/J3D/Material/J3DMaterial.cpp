@@ -185,21 +185,29 @@ static int GXCullModeToGLMode(EGXCullMode mode) {
 }
 
 void J3DMaterial::BindJ3DShader(const std::vector<std::shared_ptr<J3DTexture>>& textures) {
-  glUseProgram(mShaderProgram);
-  for (int i = 0; i < TevBlock->mTextureIndices.size(); i++) {
-    uint16_t texIndex = TevBlock->mTextureIndices[i];
-    if (AreTexIndicesAnimating) {
-      texIndex = AnimationTexIndices[i];
+    glUseProgram(mShaderProgram);
+    for (int i = 0; i < TevBlock->mTextureIndices.size(); i++) {
+        uint16_t texIndex = TevBlock->mTextureIndices[i];
+        if (AreTexIndicesAnimating) {
+            texIndex = AnimationTexIndices[i];
+        }
+      
+        glBindTextureUnit(i, textures[texIndex]->TexHandle);
     }
-
-    glBindTextureUnit(i, textures[texIndex]->TexHandle);
-  }
-
-  J3DUniformBufferObject::SetTexMatrices(TexMatrices);
+      
+    J3DUniformBufferObject::SetTexMatrices(TexMatrices);
 
 	if (IndirectBlock && IndirectBlock->mEnabled) {
-		for (uint32_t i = 0; i < 3; i++) {
-			glm::mat4 indTexMat = glm::mat4(IndirectBlock->mIndirectTexMatrices[i]->TexMatrix);
+      for (uint32_t i = 0; i < 3; i++) {
+            const glm::mat2x3& gxMtx = IndirectBlock->mIndirectTexMatrices[i]->TexMatrix;
+
+            // The matrix components need to be correctly mapped to a 4x4 matrix for OpenGL
+            glm::mat4 indTexMat(0.0f);
+            indTexMat[0] = glm::vec4(gxMtx[0].x, gxMtx[1].x, 0.0f, 0.0f);
+            indTexMat[1] = glm::vec4(gxMtx[0].y, gxMtx[1].y, 0.0f, 0.0f);
+            indTexMat[2] = glm::vec4(gxMtx[0].z, gxMtx[1].z, 0.0f, 0.0f);
+            indTexMat[3] = glm::vec4(0.0f);
+
 			J3DUniformBufferObject::SetIndTexMatrix(&indTexMat, i);
 		}
 	}
