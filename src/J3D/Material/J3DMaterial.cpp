@@ -13,192 +13,219 @@
 std::atomic<uint16_t> J3DMaterial::sMaterialIdSrc = 1;
 
 J3DMaterial::J3DMaterial()
-  : mShaderProgram(-1), AreRegisterColorsAnimating(false), AreTexIndicesAnimating(false),
-  mShape(std::weak_ptr<GXShape>()), bSelected(false), mMaterialId(sMaterialIdSrc++) {
-  TevBlock = std::make_shared<J3DTevBlock>();
+    : mShaderProgram(-1)
+    , AreRegisterColorsAnimating(false)
+    , AreTexIndicesAnimating(false)
+    , mShape(std::weak_ptr<GXShape>())
+    , bSelected(false)
+    , mMaterialId(sMaterialIdSrc++)
+{
+    TevBlock = std::make_shared<J3DTevBlock>();
 }
 
-J3DMaterial::~J3DMaterial() {
-  if (mShaderProgram != -1) {
-    glDeleteProgram(mShaderProgram);
-  }
+J3DMaterial::~J3DMaterial()
+{
+    if (mShaderProgram != -1) {
+        glDeleteProgram(mShaderProgram);
+    }
 }
 
-bool J3DMaterial::GenerateShaders() {
-  uint32_t vertShader, fragShader;
+bool J3DMaterial::GenerateShaders()
+{
+    uint32_t vertShader, fragShader;
 
-  if (mShaderProgram != -1) {
-    glDeleteProgram(mShaderProgram);
-  }
+    if (mShaderProgram != -1) {
+        glDeleteProgram(mShaderProgram);
+    }
 
-  if (!J3DVertexShaderGenerator::GenerateVertexShader(this, vertShader)) {
-    std::cout << "Error in vertex shader generator!" << std::endl;
-    return false;
-  }
+    if (!J3DVertexShaderGenerator::GenerateVertexShader(this, vertShader)) {
+        std::cout << "Error in vertex shader generator!" << std::endl;
+        return false;
+    }
 
-  if (!J3DFragmentShaderGenerator::GenerateFragmentShader(this, fragShader)) {
-    std::cout << "Error in fragment shader generator!" << std::endl;
+    if (!J3DFragmentShaderGenerator::GenerateFragmentShader(this, fragShader)) {
+        std::cout << "Error in fragment shader generator!" << std::endl;
 
-    glDeleteShader(vertShader);
-    return false;
-  }
+        glDeleteShader(vertShader);
+        return false;
+    }
 
-  mShaderProgram = glCreateProgram();
-  glAttachShader(mShaderProgram, vertShader);
-  glAttachShader(mShaderProgram, fragShader);
+    mShaderProgram = glCreateProgram();
+    glAttachShader(mShaderProgram, vertShader);
+    glAttachShader(mShaderProgram, fragShader);
 
-  glLinkProgram(mShaderProgram);
+    glLinkProgram(mShaderProgram);
 
-  int32_t isLinked = 0;
-  glGetProgramiv(mShaderProgram, GL_LINK_STATUS, &isLinked);
-  if (!isLinked) {
-    std::cout << "Shader program for material " << Name
-      << " failed to link. Error is as follows:" << std::endl;
+    int32_t isLinked = 0;
+    glGetProgramiv(mShaderProgram, GL_LINK_STATUS, &isLinked);
+    if (!isLinked) {
+        std::cout << "Shader program for material " << Name
+                  << " failed to link. Error is as follows:" << std::endl;
 
-    // Get the length of the program's log
-    int32_t logLength = 0;
-    glGetProgramiv(mShaderProgram, GL_INFO_LOG_LENGTH, &logLength);
+        // Get the length of the program's log
+        int32_t logLength = 0;
+        glGetProgramiv(mShaderProgram, GL_INFO_LOG_LENGTH, &logLength);
 
-    // Copy the log into a vector
-    std::vector<char> infoLog(logLength);
-    glGetProgramInfoLog(mShaderProgram, logLength, &logLength, &infoLog[0]);
+        // Copy the log into a vector
+        std::vector<char> infoLog(logLength);
+        glGetProgramInfoLog(mShaderProgram, logLength, &logLength, &infoLog[0]);
 
-    // Turn the vector into a string and output to console
-    std::cout << std::string(infoLog.begin(), infoLog.end()) << std::endl;
+        // Turn the vector into a string and output to console
+        std::cout << std::string(infoLog.begin(), infoLog.end()) << std::endl;
 
-    // Cleanup program and shaders
-    glDeleteProgram(mShaderProgram);
-    mShaderProgram = -1;
+        // Cleanup program and shaders
+        glDeleteProgram(mShaderProgram);
+        mShaderProgram = -1;
 
+        glDeleteShader(vertShader);
+        glDeleteShader(fragShader);
+
+        return false;
+    }
+
+    for (int i = 0; i < 8; i++) {
+        std::string name = "Texture[" + std::to_string(i) + "]";
+        uint32_t uniformID = glGetUniformLocation(mShaderProgram, name.c_str());
+
+        glProgramUniform1i(mShaderProgram, uniformID, i);
+    }
+
+    glm::vec4 test(0, 0, 0, 1.0);
+
+    uint32_t uniformID = glGetUniformLocation(mShaderProgram, "uMaterialReg[0]");
+    glProgramUniform4fv(mShaderProgram, uniformID, 1, &LightBlock.mMaterialColor[0][0]);
+    uniformID = glGetUniformLocation(mShaderProgram, "uMaterialReg[1]");
+    glProgramUniform4fv(mShaderProgram, uniformID, 1, &LightBlock.mMaterialColor[1][0]);
+    uniformID = glGetUniformLocation(mShaderProgram, "uAmbientReg[0]");
+    glProgramUniform4fv(mShaderProgram, uniformID, 1, &LightBlock.mAmbientColor[0][0]);
+    uniformID = glGetUniformLocation(mShaderProgram, "uAmbientReg[1]");
+    glProgramUniform4fv(mShaderProgram, uniformID, 1, &LightBlock.mAmbientColor[1][0]);
+
+    // Program linked successfully, detach and delete the shaders because they're not needed now
+    glDetachShader(mShaderProgram, vertShader);
+    glDetachShader(mShaderProgram, fragShader);
     glDeleteShader(vertShader);
     glDeleteShader(fragShader);
 
-    return false;
-  }
-
-  for (int i = 0; i < 8; i++) {
-    std::string name = "Texture[" + std::to_string(i) + "]";
-    uint32_t uniformID = glGetUniformLocation(mShaderProgram, name.c_str());
-
-    glProgramUniform1i(mShaderProgram, uniformID, i);
-  }
-
-  glm::vec4 test(0, 0, 0, 1.0);
-
-  uint32_t uniformID = glGetUniformLocation(mShaderProgram, "uMaterialReg[0]");
-  glProgramUniform4fv(mShaderProgram, uniformID, 1, &LightBlock.mMaterialColor[0][0]);
-  uniformID = glGetUniformLocation(mShaderProgram, "uMaterialReg[1]");
-  glProgramUniform4fv(mShaderProgram, uniformID, 1, &LightBlock.mMaterialColor[1][0]);
-  uniformID = glGetUniformLocation(mShaderProgram, "uAmbientReg[0]");
-  glProgramUniform4fv(mShaderProgram, uniformID, 1, &LightBlock.mAmbientColor[0][0]);
-  uniformID = glGetUniformLocation(mShaderProgram, "uAmbientReg[1]");
-  glProgramUniform4fv(mShaderProgram, uniformID, 1, &LightBlock.mAmbientColor[1][0]);
-
-  // Program linked successfully, detach and delete the shaders because they're not needed now
-  glDetachShader(mShaderProgram, vertShader);
-  glDetachShader(mShaderProgram, fragShader);
-  glDeleteShader(vertShader);
-  glDeleteShader(fragShader);
-
-  return true;
+    return true;
 }
 
 int GXBlendModeControlToGLFactor(EGXBlendModeControl Control)
 {
-	switch (Control)
-	{
-		case EGXBlendModeControl::Zero:
-			return GL_ZERO;
-		case EGXBlendModeControl::One:
-			return GL_ONE;
-		case EGXBlendModeControl::SrcAlpha:
-			return GL_SRC_ALPHA;
-		case EGXBlendModeControl::InverseSrcAlpha:
-			return GL_ONE_MINUS_SRC_ALPHA;
-		case EGXBlendModeControl::DstAlpha:
-			return GL_DST_ALPHA;
-		case EGXBlendModeControl::InverseDstAlpha:
-			return GL_ONE_MINUS_DST_ALPHA;
-		default:
-			return GL_ZERO;
-	}
+    switch (Control) {
+    case EGXBlendModeControl::Zero:
+        return GL_ZERO;
+    case EGXBlendModeControl::One:
+        return GL_ONE;
+    case EGXBlendModeControl::SrcAlpha:
+        return GL_SRC_ALPHA;
+    case EGXBlendModeControl::InverseSrcAlpha:
+        return GL_ONE_MINUS_SRC_ALPHA;
+    case EGXBlendModeControl::DstAlpha:
+        return GL_DST_ALPHA;
+    case EGXBlendModeControl::InverseDstAlpha:
+        return GL_ONE_MINUS_DST_ALPHA;
+    default:
+        return GL_ZERO;
+    }
 }
 
-int GXSrcBlendModeControlToGLFactor(EGXBlendModeControl control) {
-	switch (control) {
-		case EGXBlendModeControl::SrcColor:
-			return GL_DST_COLOR;
-		case EGXBlendModeControl::InverseSrcColor:
-			return GL_ONE_MINUS_DST_COLOR;
-		default:
-			return GXBlendModeControlToGLFactor(control);
-	}
+int GXSrcBlendModeControlToGLFactor(EGXBlendModeControl control)
+{
+    switch (control) {
+    case EGXBlendModeControl::SrcColor:
+        return GL_DST_COLOR;
+    case EGXBlendModeControl::InverseSrcColor:
+        return GL_ONE_MINUS_DST_COLOR;
+    default:
+        return GXBlendModeControlToGLFactor(control);
+    }
 }
 
-int GXDstBlendModeControlToGLFactor(EGXBlendModeControl control) {
-	switch (control) {
-		case EGXBlendModeControl::SrcColor:
-			return GL_SRC_COLOR;
-		case EGXBlendModeControl::InverseSrcColor:
-			return GL_ONE_MINUS_SRC_COLOR;
-		default:
-			return GXBlendModeControlToGLFactor(control);
-	}
+int GXDstBlendModeControlToGLFactor(EGXBlendModeControl control)
+{
+    switch (control) {
+    case EGXBlendModeControl::SrcColor:
+        return GL_SRC_COLOR;
+    case EGXBlendModeControl::InverseSrcColor:
+        return GL_ONE_MINUS_SRC_COLOR;
+    default:
+        return GXBlendModeControlToGLFactor(control);
+    }
 }
 
-static int GXCompareTypeToGLFunc(EGXCompareType func) {
-  switch (func) {
-  case EGXCompareType::Never:
-    return GL_NEVER;
-  case EGXCompareType::Less:
-    return GL_LESS;
-  case EGXCompareType::Equal:
-    return GL_EQUAL;
-  case EGXCompareType::LEqual:
-    return GL_LEQUAL;
-  case EGXCompareType::Greater:
-    return GL_GREATER;
-  case EGXCompareType::NEqual:
-    return GL_NOTEQUAL;
-  case EGXCompareType::GEqual:
-    return GL_GEQUAL;
-  case EGXCompareType::Always:
-    return GL_ALWAYS;
-  default:
-    return GL_ALWAYS;
-  }
+static int GXCompareTypeToGLFunc(EGXCompareType func)
+{
+    switch (func) {
+    case EGXCompareType::Never:
+        return GL_NEVER;
+    case EGXCompareType::Less:
+        return GL_LESS;
+    case EGXCompareType::Equal:
+        return GL_EQUAL;
+    case EGXCompareType::LEqual:
+        return GL_LEQUAL;
+    case EGXCompareType::Greater:
+        return GL_GREATER;
+    case EGXCompareType::NEqual:
+        return GL_NOTEQUAL;
+    case EGXCompareType::GEqual:
+        return GL_GEQUAL;
+    case EGXCompareType::Always:
+        return GL_ALWAYS;
+    default:
+        return GL_ALWAYS;
+    }
 }
 
-static int GXCullModeToGLMode(EGXCullMode mode) {
-  switch (mode) {
-  case EGXCullMode::None:
-    return GL_NONE;
-  case EGXCullMode::Front:
-    return GL_FRONT;
-  case EGXCullMode::Back:
-    return GL_BACK;
-  case EGXCullMode::All:
-    return GL_FRONT_AND_BACK;
-  default:
-    return GL_NONE;
-  }
+static int GXCullModeToGLMode(EGXCullMode mode)
+{
+    switch (mode) {
+    case EGXCullMode::None:
+        return GL_NONE;
+    case EGXCullMode::Front:
+        return GL_FRONT;
+    case EGXCullMode::Back:
+        return GL_BACK;
+    case EGXCullMode::All:
+        return GL_FRONT_AND_BACK;
+    default:
+        return GL_NONE;
+    }
 }
 
-void J3DMaterial::BindJ3DShader(const std::vector<std::shared_ptr<J3DTexture>>& textures) {
+void J3DMaterial::BindJ3DShader(const std::vector<std::shared_ptr<J3DTexture>>& textures)
+{
     glUseProgram(mShaderProgram);
     for (int i = 0; i < TevBlock->mTextureIndices.size(); i++) {
         uint16_t texIndex = TevBlock->mTextureIndices[i];
-        if (AreTexIndicesAnimating) {
+
+        // i < 8; AnimationTexIndices is a static array of 8 elements
+        if (AreTexIndicesAnimating && i < 8) {
             texIndex = AnimationTexIndices[i];
         }
-      
-        glBindTextureUnit(i, textures[texIndex]->TexHandle);
+
+        if (texIndex >= textures.size()) {
+#if _DEBUG
+            std::cout << "Warning: Texture index " << texIndex << " is out of bounds for the provided texture array." << std::endl;
+#endif
+            continue;
+        }
+
+        const std::shared_ptr<J3DTexture>& texture = textures[texIndex];
+        if (texture == nullptr || texture->TexHandle == UINT32_MAX) {
+#if _DEBUG
+            std::cout << "Warning: Texture at index " << texIndex << " is null or has an invalid OpenGL handle." << std::endl;
+#endif
+        }
+
+        glBindTextureUnit(i, texture->TexHandle);
     }
-      
+
     J3DUniformBufferObject::SetTexMatrices(TexMatrices);
 
-	if (IndirectBlock && IndirectBlock->mEnabled) {
-      for (uint32_t i = 0; i < 3; i++) {
+    if (IndirectBlock && IndirectBlock->mEnabled) {
+        for (uint32_t i = 0; i < 3; i++) {
             const glm::mat2x3& gxMtx = IndirectBlock->mIndirectTexMatrices[i]->TexMatrix;
 
             // The matrix components need to be correctly mapped to a 4x4 matrix for OpenGL
@@ -208,107 +235,103 @@ void J3DMaterial::BindJ3DShader(const std::vector<std::shared_ptr<J3DTexture>>& 
             indTexMat[2] = glm::vec4(gxMtx[0].z, gxMtx[1].z, 0.0f, 0.0f);
             indTexMat[3] = glm::vec4(0.0f);
 
-			J3DUniformBufferObject::SetIndTexMatrix(&indTexMat, i);
-		}
-	}
+            J3DUniformBufferObject::SetIndTexMatrix(&indTexMat, i);
+        }
+    }
 
-	if (AreRegisterColorsAnimating) {
-		J3DUniformBufferObject::SetTevColors(AnimationRegisterColors);
-		J3DUniformBufferObject::SetKonstColors(AnimationKonstColors);
-	}
-	else {
-		J3DUniformBufferObject::SetTevColors(TevBlock->mTevColors);
-		J3DUniformBufferObject::SetKonstColors(TevBlock->mTevKonstColors);
-	}
+    if (AreRegisterColorsAnimating) {
+        J3DUniformBufferObject::SetTevColors(AnimationRegisterColors);
+        J3DUniformBufferObject::SetKonstColors(AnimationKonstColors);
+    } else {
+        J3DUniformBufferObject::SetTevColors(TevBlock->mTevColors);
+        J3DUniformBufferObject::SetKonstColors(TevBlock->mTevKonstColors);
+    }
 
-  if (bSelected) {
-    J3DUniformBufferObject::SetHighlightColor(glm::vec4(0.5f, 0.5f, 0.25f, 0.0f));
-  }
-  else {
-    J3DUniformBufferObject::SetHighlightColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-  }
+    if (bSelected) {
+        J3DUniformBufferObject::SetHighlightColor(glm::vec4(0.5f, 0.5f, 0.25f, 0.0f));
+    } else {
+        J3DUniformBufferObject::SetHighlightColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+    }
 }
 
-void J3DMaterial::ConfigureGLState() {
-  if (PEBlock.mBlendMode.Type != EGXBlendMode::None) {
-    glEnable(GL_BLEND);
-    
-    switch (PEBlock.mBlendMode.Type)
-    {
-    case EGXBlendMode::Blend:
-      glBlendEquation(GL_FUNC_ADD);
-      glBlendFunc(GXSrcBlendModeControlToGLFactor(PEBlock.mBlendMode.SourceFactor), GXDstBlendModeControlToGLFactor(PEBlock.mBlendMode.DestinationFactor));
-      break;
-    case EGXBlendMode::Subtract:
-      glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-      glBlendFunc(GL_ONE, GL_ONE);
-      break;
-    case EGXBlendMode::Logic:
-      glBlendEquation(GL_FUNC_ADD);
-      break;
+void J3DMaterial::ConfigureGLState()
+{
+    if (PEBlock.mBlendMode.Type != EGXBlendMode::None) {
+        glEnable(GL_BLEND);
+
+        switch (PEBlock.mBlendMode.Type) {
+        case EGXBlendMode::Blend:
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFunc(GXSrcBlendModeControlToGLFactor(PEBlock.mBlendMode.SourceFactor), GXDstBlendModeControlToGLFactor(PEBlock.mBlendMode.DestinationFactor));
+            break;
+        case EGXBlendMode::Subtract:
+            glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+        case EGXBlendMode::Logic:
+            glBlendEquation(GL_FUNC_ADD);
+            break;
+        }
+    } else {
+        glDisable(GL_BLEND);
     }
-  }
-  else {
-    glDisable(GL_BLEND);
-  }
 
-  if (LightBlock.mCullMode != EGXCullMode::None) {
-    glEnable(GL_CULL_FACE);
-    glCullFace(GXCullModeToGLMode(LightBlock.mCullMode));
-  }
-  else {
-    glDisable(GL_CULL_FACE);
-  }
+    if (LightBlock.mCullMode != EGXCullMode::None) {
+        glEnable(GL_CULL_FACE);
+        glCullFace(GXCullModeToGLMode(LightBlock.mCullMode));
+    } else {
+        glDisable(GL_CULL_FACE);
+    }
 
-  if (PEBlock.mZMode.Enable == true) {
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(PEBlock.mZMode.UpdateEnable ? GL_TRUE : GL_FALSE);
-    glDepthFunc(GXCompareTypeToGLFunc(PEBlock.mZMode.Function));
-  }
-  else {
-    glDisable(GL_DEPTH_TEST);
-  }
+    if (PEBlock.mZMode.Enable == true) {
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(PEBlock.mZMode.UpdateEnable ? GL_TRUE : GL_FALSE);
+        glDepthFunc(GXCompareTypeToGLFunc(PEBlock.mZMode.Function));
+    } else {
+        glDisable(GL_DEPTH_TEST);
+    }
 
-  glPolygonOffset(0.0f, 0.0f);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glPolygonOffset(0.0f, 0.0f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-  glFrontFace(GL_CW);
+    glFrontFace(GL_CW);
 }
 
 void J3DMaterial::Render(const std::vector<std::shared_ptr<J3DTexture>>& textures,
-  uint32_t shaderOverride) {
-  if (mShape.expired()) {
-    return;
-  }
+    uint32_t shaderOverride)
+{
+    if (mShape.expired()) {
+        return;
+    }
 
-  std::shared_ptr<GXShape> lockedShape = mShape.lock();
-  if (!lockedShape || !lockedShape->GetVisible()) {
-    return;
-  }
+    std::shared_ptr<GXShape> lockedShape = mShape.lock();
+    if (!lockedShape || !lockedShape->GetVisible()) {
+        return;
+    }
 
-  if (shaderOverride == 0) {
-    BindJ3DShader(textures);
-  }
-  else {
-    glUseProgram(shaderOverride);
-    J3DUniformBufferObject::SetMaterialId(mMaterialId);
-  }
+    if (shaderOverride == 0) {
+        BindJ3DShader(textures);
+    } else {
+        glUseProgram(shaderOverride);
+        J3DUniformBufferObject::SetMaterialId(mMaterialId);
+    }
 
-  ConfigureGLState();
+    ConfigureGLState();
 
-  J3DUniformBufferObject::SetBillboardType(*lockedShape->GetUserData<uint32_t>());
-  J3DUniformBufferObject::SubmitUBO();
+    J3DUniformBufferObject::SetBillboardType(*lockedShape->GetUserData<uint32_t>());
+    J3DUniformBufferObject::SubmitUBO();
 
-  uint32_t offset, count;
-  lockedShape->GetVertexOffsetAndCount(offset, count);
+    uint32_t offset, count;
+    lockedShape->GetVertexOffsetAndCount(offset, count);
 
-  glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, (const void*)(offset * sizeof(uint32_t)));
+    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, (const void*)(offset * sizeof(uint32_t)));
 }
 
 void J3DMaterial::CalculateTexMatrices(const glm::mat4& modelMatrix, const glm::mat4& viewMatrix,
-  const glm::mat4& projMatrix) {
-  for (int i = 0; i < TexGenBlock.mTexMatrix.size(); i++) {
-    TexGenBlock.mTexMatrix[i]->CalculateMatrix(modelMatrix, viewMatrix, projMatrix);
-    TexMatrices[i] = TexGenBlock.mTexMatrix[i]->CalculatedMatrix;
-  }
+    const glm::mat4& projMatrix)
+{
+    for (int i = 0; i < TexGenBlock.mTexMatrix.size(); i++) {
+        TexGenBlock.mTexMatrix[i]->CalculateMatrix(modelMatrix, viewMatrix, projMatrix);
+        TexMatrices[i] = TexGenBlock.mTexMatrix[i]->CalculatedMatrix;
+    }
 }
