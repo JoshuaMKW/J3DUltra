@@ -108,20 +108,6 @@ void J3DModelInstance::AnimateShapeVisibility(float deltaTime) {
 	}
 }
 
-void J3DModelInstance::Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, bool updateAnimations) {
-    if (updateAnimations) {
-		TickAnimations(deltaTime);
-		AnimateTEVRegisterColors(deltaTime, material);
-		AnimateMaterialTextures(deltaTime, material);
-		AnimateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
-		AnimateShapeVisibility(deltaTime);
-        AnimateJointMatrices(deltaTime);
-		CalculateJointMatrices(deltaTime);
-	}
-
-    material->CalculateTexMatrices(mTransform.ToMat4(), viewMatrix, projMatrix);
-}
-
 void J3DModelInstance::SetTranslation(const glm::vec3 &trans) {
 	mTransform.SetTranslation(trans);
     mModelMatrix = mReferenceFrame * mTransform.ToMat4();
@@ -206,6 +192,25 @@ void J3DModelInstance::GatherRenderPackets(std::vector<J3DRenderPacket>& packetL
 
         packetList.emplace_back(J3DRenderPacket { sortKey, mat, this });
 	}
+}
+
+void J3DModelInstance::UpdateAnimations(float deltaTime)
+{
+    TickAnimations(deltaTime);
+    AnimateShapeVisibility(deltaTime);
+    AnimateJointMatrices(deltaTime);
+    CalculateJointMatrices(deltaTime);
+}
+
+void J3DModelInstance::UpdateMaterial(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, bool updateAnimations)
+{
+    if (updateAnimations) {
+        AnimateTEVRegisterColors(deltaTime, material);
+        AnimateMaterialTextures(deltaTime, material);
+        AnimateMaterialTextureMatrices(deltaTime, material, viewMatrix, projMatrix);
+    }
+
+    material->CalculateTexMatrices(mTransform.ToMat4(), viewMatrix, projMatrix);
 }
 
 void J3DModelInstance::AnimateJointMatrices(float deltaTime) {

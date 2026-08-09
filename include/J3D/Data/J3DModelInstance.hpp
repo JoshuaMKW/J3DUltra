@@ -98,7 +98,8 @@ public:
 
     void GatherRenderPackets(std::vector<J3DRenderPacket>& packetList, glm::vec3 cameraPosition);
 
-    void Update(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, bool updateAnimations = true);
+    void UpdateAnimations(float deltaTime);
+    void UpdateMaterial(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, bool updateAnimations = true);
     void Render(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride = 0);
 
     J3DLight GetLight(int index) const;

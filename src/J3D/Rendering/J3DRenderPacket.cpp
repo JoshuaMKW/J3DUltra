@@ -11,7 +11,7 @@ void J3DRenderPacket::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& 
         return;
     }
 
-    Instance->Update(deltaTime, Material, viewMatrix, projMatrix, updateAnimations);
+    Instance->UpdateMaterial(deltaTime, Material, viewMatrix, projMatrix, updateAnimations);
 }
 
 void J3DRenderPacket::Render(uint32_t materialShaderOverride)

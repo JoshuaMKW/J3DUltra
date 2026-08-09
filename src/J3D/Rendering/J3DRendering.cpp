@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <execution>
+#include <vector>
 
 #include "J3D/Rendering/J3DRendering.hpp"
 #include "J3D/Rendering/J3DRenderPacket.hpp"
@@ -37,11 +39,26 @@ J3D::Rendering::RenderPacketVector J3D::Rendering::SortPackets(ModelInstanceVect
 }
 
 void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, RenderPacketVector& renderPackets, bool updateAnimations) {
-    //for (J3DRenderPacket &packet : renderPackets) {
-    //    packet.Update(deltaTime, viewMatrix, projMatrix);
-    //}
+    if (updateAnimations) {
+        // Collect the unique model instances from the render packets to avoid updating the same instance animations multiple times.
+        std::vector<J3DModelInstance*> instances;
+        instances.reserve(renderPackets.size());
+        for (const J3DRenderPacket& packet : renderPackets) {
+            if (packet.Instance != nullptr) {
+                instances.push_back(packet.Instance);
+            }
+        }
 
-    std::for_each(std::execution::par_unseq, renderPackets.begin(), renderPackets.end(), [&deltaTime, &viewMatrix, &projMatrix, updateAnimations](J3DRenderPacket& packet) {
+        // Sort and remove duplicates
+        std::sort(instances.begin(), instances.end());
+        instances.erase(std::unique(instances.begin(), instances.end()), instances.end());
+
+        std::for_each(std::execution::par, instances.begin(), instances.end(), [deltaTime](J3DModelInstance* instance) {
+            instance->UpdateAnimations(deltaTime);
+        });
+    }
+
+    std::for_each(std::execution::par, renderPackets.begin(), renderPackets.end(), [&deltaTime, &viewMatrix, &projMatrix, updateAnimations](J3DRenderPacket& packet) {
         packet.Update(deltaTime, viewMatrix, projMatrix, updateAnimations);
     });
 }
