@@ -16,7 +16,7 @@ namespace J3D {
         void SetSortFunction(std::function<void(std::vector<J3DRenderPacket>&)> sortFunction);
         std::vector<J3DRenderPacket> SortPackets(const shared_vector<J3DModelInstance>& modelInstances, const glm::vec3& cameraPosition);
 
-        void Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, shared_vector<J3DModelInstance>& modelInstances, bool updateAnimations = true);
-        void Render(std::vector<J3DRenderPacket>& modelInstances, uint32_t materialShaderOverride = 0);
+        std::vector<J3DRenderPacket> Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, shared_vector<J3DModelInstance>& modelInstances, bool updateAnimations = true);
+        void Render(std::vector<J3DRenderPacket>& renderPackets, uint32_t materialShaderOverride = 0);
     }
 }

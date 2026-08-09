@@ -41,7 +41,7 @@ std::vector<J3DRenderPacket> J3D::Rendering::SortPackets(const shared_vector<J3D
     return packets;
 }
 
-void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, shared_vector<J3DModelInstance>& modelInstances, bool updateAnimations) {
+std::vector<J3DRenderPacket> J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, shared_vector<J3DModelInstance>& modelInstances, bool updateAnimations) {
     if (updateAnimations) {
         std::for_each(std::execution::par, modelInstances.begin(), modelInstances.end(), [deltaTime](std::shared_ptr<J3DModelInstance> instance) {
             instance->UpdateAnimations(deltaTime);
@@ -54,6 +54,8 @@ void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& p
     std::for_each(std::execution::par, packets.begin(), packets.end(), [&deltaTime, &viewMatrix, &projMatrix, updateAnimations](J3DRenderPacket& packet) {
         packet.Update(deltaTime, viewMatrix, projMatrix, updateAnimations);
     });
+
+    return packets;
 }
 
 void J3D::Rendering::Render(std::vector<J3DRenderPacket>& renderPackets, uint32_t materialShaderOverride)
