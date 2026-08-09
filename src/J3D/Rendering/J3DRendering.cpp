@@ -5,22 +5,25 @@
 #include "J3D/Rendering/J3DRendering.hpp"
 #include "J3D/Rendering/J3DRenderPacket.hpp"
 #include "J3D/Data/J3DModelInstance.hpp"
+#include "J3D/Util/J3DUtil.hpp"
 
 namespace J3D {
     namespace Rendering {
         namespace {
-            std::function<void(RenderPacketVector&)> SortFunction = [](RenderPacketVector) {};
+            std::function<void(std::vector<J3DRenderPacket>&)> SortFunction = [](std::vector<J3DRenderPacket> &) { };
+        }
+
+        void SetSortFunction(std::function<void(std::vector<J3DRenderPacket>&)> sortFunction)
+        {
+            if (sortFunction) {
+                SortFunction = sortFunction;
+            }
         }
     }
 }
 
-void J3D::Rendering::SetSortFunction(std::function<void(RenderPacketVector&)> sortFunction) {
-    if (sortFunction) {
-        SortFunction = sortFunction;
-    }
-}
-
-J3D::Rendering::RenderPacketVector J3D::Rendering::SortPackets(ModelInstanceVector& modelInstances, glm::vec3 cameraPosition) {
+std::vector<J3DRenderPacket> J3D::Rendering::SortPackets(const shared_vector<J3DModelInstance>& modelInstances, const glm::vec3& cameraPosition)
+{
     std::vector<J3DRenderPacket> packets;
 
 	size_t materialCount = 0;
@@ -38,32 +41,23 @@ J3D::Rendering::RenderPacketVector J3D::Rendering::SortPackets(ModelInstanceVect
     return packets;
 }
 
-void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, RenderPacketVector& renderPackets, bool updateAnimations) {
+void J3D::Rendering::Update(float deltaTime, glm::mat4& viewMatrix, glm::mat4& projMatrix, shared_vector<J3DModelInstance>& modelInstances, bool updateAnimations) {
     if (updateAnimations) {
-        // Collect the unique model instances from the render packets to avoid updating the same instance animations multiple times.
-        std::vector<J3DModelInstance*> instances;
-        instances.reserve(renderPackets.size());
-        for (const J3DRenderPacket& packet : renderPackets) {
-            if (packet.Instance != nullptr) {
-                instances.push_back(packet.Instance);
-            }
-        }
-
-        // Sort and remove duplicates
-        std::sort(instances.begin(), instances.end());
-        instances.erase(std::unique(instances.begin(), instances.end()), instances.end());
-
-        std::for_each(std::execution::par, instances.begin(), instances.end(), [deltaTime](J3DModelInstance* instance) {
+        std::for_each(std::execution::par, modelInstances.begin(), modelInstances.end(), [deltaTime](std::shared_ptr<J3DModelInstance> instance) {
             instance->UpdateAnimations(deltaTime);
         });
     }
 
-    std::for_each(std::execution::par, renderPackets.begin(), renderPackets.end(), [&deltaTime, &viewMatrix, &projMatrix, updateAnimations](J3DRenderPacket& packet) {
+    const glm::vec3 position = glm::vec3(glm::inverse(viewMatrix)[3]);
+    std::vector<J3DRenderPacket> packets = J3D::Rendering::SortPackets(modelInstances, position);
+
+    std::for_each(std::execution::par, packets.begin(), packets.end(), [&deltaTime, &viewMatrix, &projMatrix, updateAnimations](J3DRenderPacket& packet) {
         packet.Update(deltaTime, viewMatrix, projMatrix, updateAnimations);
     });
 }
 
-void J3D::Rendering::Render(RenderPacketVector& renderPackets, uint32_t materialShaderOverride) {
+void J3D::Rendering::Render(std::vector<J3DRenderPacket>& renderPackets, uint32_t materialShaderOverride)
+{
     for (J3DRenderPacket &packet : renderPackets) {
         packet.Render(materialShaderOverride);
     }

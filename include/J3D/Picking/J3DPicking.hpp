@@ -46,7 +46,7 @@ namespace J3D {
         /// <param name="viewMatrix">View matrix to render the picking scene with</param>
         /// <param name="projMatrix">Projection matrix to render the picking scene with</param>
         /// <param name="modelInstances">Model instances to render in the picking scene</param>
-        void RenderPickingScene(J3D::Rendering::RenderPacketVector& renderPackets);
+        void RenderPickingScene(std::vector<J3DRenderPacket>& renderPackets);
 
         /// <summary>
         /// Returns a tuple of (Model Id, Material Id) from the picking framebuffer at

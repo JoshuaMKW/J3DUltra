@@ -89,7 +89,8 @@ namespace J3D {
             glDeleteTextures(2, mTexObjs);
         }
 
-        void RenderPickingScene(J3D::Rendering::RenderPacketVector& renderPackets) {
+        void RenderPickingScene(std::vector<J3DRenderPacket>& renderPackets)
+        {
             if (!IsPickingEnabled()) {
                 return;
             }
