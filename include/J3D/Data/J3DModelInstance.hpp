@@ -1,7 +1,7 @@
 #pragma once
 
-#include "J3D/Rendering/J3DRenderPacket.hpp"
 #include "J3D/Rendering/J3DLight.hpp"
+#include "J3D/Rendering/J3DRenderPacket.hpp"
 #include "J3D/Util/J3DTransform.hpp"
 #include "J3D/Util/J3DUtil.hpp"
 
@@ -10,12 +10,12 @@
 #include <vector>
 
 namespace J3DAnimation {
-    class J3DColorAnimationInstance;
-    class J3DTexIndexAnimationInstance;
-    class J3DTexMatrixAnimationInstance;
-    class J3DJointAnimationInstance;
-    class J3DJointFullAnimationInstance;
-    class J3DVisibilityAnimationInstance;
+class J3DColorAnimationInstance;
+class J3DTexIndexAnimationInstance;
+class J3DTexMatrixAnimationInstance;
+class J3DJointAnimationInstance;
+class J3DJointFullAnimationInstance;
+class J3DVisibilityAnimationInstance;
 }
 
 struct J3DTexture;
@@ -40,6 +40,8 @@ class J3DModelInstance {
 
     // Lights applied to this model instance
     J3DLight mLights[8];
+
+    void* mUserData = nullptr;
 
     // Recalculates joint transforms based on a load animation - BCK for keyframes at discrete time units, BCA for values at every frame.
     void CalculateJointMatrices(float deltaTime);
@@ -86,21 +88,21 @@ public:
     J3DModelInstance(std::shared_ptr<J3DModelData> modelData, uint16_t id);
     virtual ~J3DModelInstance();
 
-    void SetTranslation(const glm::vec3 &trans);
-    void SetRotation(const glm::vec3 &rot);
-    void SetScale(const glm::vec3 &scale);
+    void SetTranslation(const glm::vec3& trans);
+    void SetRotation(const glm::vec3& rot);
+    void SetScale(const glm::vec3& scale);
 
-    void SetTransform(const glm::mat4 &transform);
-    void SetReferenceFrame(const glm::mat4 &frame);
+    void SetTransform(const glm::mat4& transform);
+    void SetReferenceFrame(const glm::mat4& frame);
 
     void GetBoundingBox(glm::vec3& min, glm::vec3& max) const;
-	const shared_vector<J3DMaterial>& GetMaterials() const;
+    const shared_vector<J3DMaterial>& GetMaterials() const;
 
     void GatherRenderPackets(std::vector<J3DRenderPacket>& packetList, glm::vec3 cameraPosition);
 
     void UpdateAnimations(float deltaTime);
     void UpdateMaterial(float deltaTime, std::shared_ptr<J3DMaterial> material, glm::mat4& viewMatrix, glm::mat4& projMatrix, bool updateAnimations = true);
-    void Render(const std::shared_ptr<J3DMaterial> &material, uint32_t materialShaderOverride = 0);
+    void Render(const std::shared_ptr<J3DMaterial>& material, uint32_t materialShaderOverride = 0);
 
     J3DLight GetLight(int index) const;
     void SetLight(const J3DLight& light, int index);
@@ -136,4 +138,16 @@ public:
     std::shared_ptr<J3DModelData> GetModelData() const { return mModelData; }
     // Returns this model's unique ID.
     uint16_t GetModelId() const { return mModelId; }
+
+    template <typename T>
+    void SetUserData(T* data)
+    {
+        mUserData = static_cast<void*>(data);
+    }
+
+    template <typename T>
+    T* GetUserData() const
+    {
+        return static_cast<T*>(mUserData);
+    }
 };
